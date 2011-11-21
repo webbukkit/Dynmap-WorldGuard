@@ -15,7 +15,7 @@ layer:
 use3dregions: false
 
 # Format for popup - substitute values for macros
-infowindow: '<div class=\"infowindow\"><span style=\"font-size:120%;">%regionname% (%parent) - %priority</span><br /> Owners <span style="font-weight:bold;">%playerowners%<br/>%groupowners%</span><br/>Members <span style="font-weight:bold;">%playermembers%<br/>%groupmembers%</span><br/>Flags<br /><span style="font-weight:bold;">%flags%</span></div>'
+infowindow: '<div class=\"infowindow\"><span style=\"font-size:120%;">%regionname% (%parent%) - %priority%</span><br /> Owners <span style="font-weight:bold;">%playerowners%<br/>%groupowners%</span><br/>Members <span style="font-weight:bold;">%playermembers%<br/>%groupmembers%</span><br/>Flags<br /><span style="font-weight:bold;">%flags%</span></div>'
 
 regionstyle:
   strokeColor: "#FF0000"
