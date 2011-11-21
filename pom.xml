@@ -1,0 +1,83 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.dynmap</groupId>
+  <artifactId>Dynmap-WorldGuard</artifactId>
+  <version>0.10</version>
+  
+    <build>
+  	  <resources>
+		<resource>
+		  <directory>src/main/resources</directory>
+		  <filtering>true</filtering>
+		  <includes>
+			<include>*.yml</include>
+			<include>*.txt</include>
+		  </includes>
+		</resource>
+		<resource>
+		  <directory>src/main/resources</directory>
+		  <filtering>false</filtering>
+		  <excludes>
+			<exclude>*.yml</exclude>
+			<exclude>*.txt</exclude>
+		  </excludes>
+		</resource>
+	  </resources>
+  
+  	<plugins>
+  		<plugin>
+  			<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+    				<descriptors>
+        				<descriptor>src/main/assembly/package.xml</descriptor>
+    				</descriptors>
+					<!-- Hack for bug in maven-assembly: http://jira.codehaus.org/browse/MASSEMBLY-449 -->
+					<archiverConfig>
+						<fileMode>420</fileMode> <!-- 420(dec) = 644(oct) -->
+						<directoryMode>493</directoryMode> <!-- 493(dec) = 755(oct) -->
+						<defaultDirectoryMode>493</defaultDirectoryMode>
+					</archiverConfig>
+				</configuration>
+  			
+  			<executions>
+  				<execution>
+  					<id>build</id>
+  					<phase>package</phase>
+  					<goals>
+  						<goal>single</goal>
+  					</goals>
+  				</execution>
+  			</executions>
+  		</plugin>
+  	</plugins>
+  </build>
+  
+  <dependencies>
+  	<dependency>
+  		<groupId>org.dynmap</groupId>
+  		<artifactId>dynmap-api</artifactId>
+  		<version>0.25</version>
+  		<scope>compile</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.bukkit</groupId>
+  		<artifactId>bukkit</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  		<scope>compile</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.sk89q</groupId>
+  		<artifactId>WorldGuard</artifactId>
+  		<version>5.3</version>
+  		<scope>system</scope>
+  		<systemPath>${project.basedir}/WorldGuard.jar</systemPath>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.sk89q</groupId>
+  		<artifactId>WorldEdit</artifactId>
+  		<version>4.7</version>
+  		<scope>system</scope>
+  		<systemPath>${project.basedir}/WorldEdit.jar</systemPath>
+  	</dependency>
+  </dependencies>
+</project>

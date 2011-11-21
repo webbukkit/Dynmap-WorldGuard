@@ -1,0 +1,45 @@
+# Dynmap-WorldGuard configuration
+#
+update:
+  # Seconds between checks for Residence updates
+  period: 300
+
+layer:
+  name: "WorldGuard"
+  # Make mobs layer hidden by default
+  hidebydefault: false
+  # ordering priority in layer menu (low goes before high - default is 0)
+  layerprio: 0
+
+# Set true to show 3D volumes for zones  
+use3dregions: false
+
+# Format for popup - substitute values for macros
+infowindow: '<div class=\"infowindow\"><span style=\"font-size:120%;">%regionname% (%parent) - %priority</span><br /> Owners <span style="font-weight:bold;">%playerowners%<br/>%groupowners%</span><br/>Members <span style="font-weight:bold;">%playermembers%<br/>%groupmembers%</span><br/>Flags<br /><span style="font-weight:bold;">%flags%</span></div>'
+
+regionstyle:
+  strokeColor: "#FF0000"
+  strokeOpacity: 0.8
+  strokeWeight: 3
+  fillColor: "#FF0000"
+  fillOpacity: 0.35
+  
+# Optional setting to limit which regions to show, by name - if commented out, all regions are shown
+#visibleregions:
+#  - homebase
+#  - miningsite
+#  - area.subzone1
+  
+# Optional setting to hide specific regions, by name
+#hiddenregions:
+#  - hiddenplace
+#  - secretsite
+  
+# Optional per-region overrides for regionstyle (any defined replace those in regionstyle)
+#customstyle:
+#  homebase:
+#    strokeColor: "#00FF00"
+#  homebase.sub1:
+#    strokeColor: "#007F00"
+  
+
