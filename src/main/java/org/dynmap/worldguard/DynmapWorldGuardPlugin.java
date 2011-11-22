@@ -223,10 +223,18 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     }
     
     public void onEnable() {
+    	info("initializing");
         Plugin p = this.getServer().getPluginManager().getPlugin("dynmap"); /* Find dynmap */
         if(p == null) {
-            severe("Error loading dynmap API!");
+            severe("Error loading Dynmap!");
             return;
+        }
+        if(!p.isEnabled()) {	/* Make sure it's enabled before us */
+        	getServer().getPluginManager().enablePlugin(p);
+        	if(!p.isEnabled()) {
+        		severe("Failed to enable Dynmap!");
+        		return;
+        	}
         }
         api = (DynmapAPI)p; /* Get API */
         /* Now, get markers API */
@@ -240,6 +248,13 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         if(p == null) {
             severe("Error loading WorldGuard");
             return;
+        }
+        if(!p.isEnabled()) {	/* Make sure it's enabled before us */
+        	getServer().getPluginManager().enablePlugin(p);
+        	if(!p.isEnabled()) {
+        		severe("Failed to enable WorldGuard!");
+        		return;
+        	}
         }
         wg = (WorldGuardPlugin)p;
         
