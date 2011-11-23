@@ -8,25 +8,26 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.Event.Priority;
+import org.bukkit.event.Event.Type;
+import org.bukkit.event.server.PluginEnableEvent;
+import org.bukkit.event.server.ServerListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
 import org.dynmap.DynmapAPI;
 import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerSet;
-import org.dynmap.markers.Marker;
 
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.BlockVector2D;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.GlobalRegionManager;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
@@ -34,6 +35,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static final Logger log = Logger.getLogger("Minecraft");
     private static final String LOG_PREFIX = "[Dynmap-WorldGuard] ";
     private static final String DEF_INFOWINDOW = "<div class=\"infowindow\"><span style=\"font-size:120%;\">%regionname%</span><br /> Owner <span style=\"font-weight:bold;\">%playerowners%</span><br />Flags<br /><span style=\"font-weight:bold;\">%flags%</span></div>";
+    Plugin dynmap;
     DynmapAPI api;
     MarkerAPI markerapi;
     WorldGuardPlugin wg;
@@ -47,6 +49,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     Map<String, AreaStyle> cusstyle;
     Set<String> visible;
     Set<String> hidden;
+    boolean stop; 
     
     private static class AreaStyle {
         String strokecolor;
@@ -81,7 +84,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
 
     private class WorldGuardUpdate implements Runnable {
         public void run() {
-            updateRegions();
+            if(!stop)
+                updateRegions();
         }
     }
     
@@ -221,43 +225,50 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         getServer().getScheduler().scheduleSyncDelayedTask(this, new WorldGuardUpdate(), updperiod);
         
     }
+
+    private class OurServerListener extends ServerListener {
+        @Override
+        public void onPluginEnable(PluginEnableEvent event) {
+            Plugin p = event.getPlugin();
+            String name = p.getDescription().getName();
+            if(name.equals("dynmap") || name.equals("WorldGuard")) {
+                if(dynmap.isEnabled() && wg.isEnabled())
+                    activate();
+            }
+        }
+    }
     
     public void onEnable() {
-    	info("initializing");
-        Plugin p = this.getServer().getPluginManager().getPlugin("dynmap"); /* Find dynmap */
-        if(p == null) {
-            severe("Error loading Dynmap!");
+        info("initializing");
+        PluginManager pm = getServer().getPluginManager();
+        /* Get dynmap */
+        dynmap = pm.getPlugin("dynmap");
+        if(dynmap == null) {
+            severe("Cannot find dynmap!");
             return;
         }
-        if(!p.isEnabled()) {	/* Make sure it's enabled before us */
-        	getServer().getPluginManager().enablePlugin(p);
-        	if(!p.isEnabled()) {
-        		severe("Failed to enable Dynmap!");
-        		return;
-        	}
+        api = (DynmapAPI)dynmap; /* Get API */
+        /* Get WorldGuard */
+        Plugin p = pm.getPlugin("WorldGuard");
+        if(p == null) {
+            severe("Cannot find WorldGuard!");
+            return;
         }
-        api = (DynmapAPI)p; /* Get API */
+        wg = (WorldGuardPlugin)p;
+        /* If both enabled, activate */
+        if(dynmap.isEnabled() && wg.isEnabled())
+            activate();
+        else
+            getServer().getPluginManager().registerEvent(Type.PLUGIN_ENABLE, new OurServerListener(), Priority.Monitor, this);        
+    }
+
+    private void activate() {
         /* Now, get markers API */
         markerapi = api.getMarkerAPI();
         if(markerapi == null) {
             severe("Error loading dynmap marker API!");
             return;
         }
-        /* Find worldguard */
-        p = this.getServer().getPluginManager().getPlugin("WorldGuard");
-        if(p == null) {
-            severe("Error loading WorldGuard");
-            return;
-        }
-        if(!p.isEnabled()) {	/* Make sure it's enabled before us */
-        	getServer().getPluginManager().enablePlugin(p);
-        	if(!p.isEnabled()) {
-        		severe("Failed to enable WorldGuard!");
-        		return;
-        	}
-        }
-        wg = (WorldGuardPlugin)p;
-        
         /* Load configuration */
         FileConfiguration cfg = getConfig();
         cfg.options().copyDefaults(true);   /* Load defaults, if needed */
@@ -298,10 +309,11 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         int per = cfg.getInt("update.period", 300);
         if(per < 15) per = 15;
         updperiod = (long)(per*20);
+        stop = false;
         
         getServer().getScheduler().scheduleSyncDelayedTask(this, new WorldGuardUpdate(), 40);   /* First time is 2 seconds */
         
-        info("version " + this.getDescription().getVersion() + " is enabled");
+        info("version " + this.getDescription().getVersion() + " is activated");
     }
 
     public void onDisable() {
@@ -310,6 +322,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             set = null;
         }
         resareas.clear();
+        stop = true;
     }
 
 }
