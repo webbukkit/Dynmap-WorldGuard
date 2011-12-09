@@ -26,6 +26,7 @@ import org.dynmap.markers.MarkerSet;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.BlockVector2D;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
@@ -47,6 +48,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     String infowindow;
     AreaStyle defstyle;
     Map<String, AreaStyle> cusstyle;
+    Map<String, AreaStyle> cuswildstyle;
+    Map<String, AreaStyle> ownerstyle;
     Set<String> visible;
     Set<String> hidden;
     boolean stop; 
@@ -125,10 +128,40 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         return true;
     }
     
-    private void addStyle(String resid, AreaMarker m) {
+    private void addStyle(String resid, AreaMarker m, ProtectedRegion region) {
         AreaStyle as = cusstyle.get(resid);
+        if(as == null) {    /* Check for wildcard style matches */
+            for(String wc : cuswildstyle.keySet()) {
+                String[] tok = wc.split("\\|");
+                if((tok.length == 1) && resid.startsWith(tok[0]))
+                    as = cuswildstyle.get(wc);
+                else if((tok.length >= 2) && resid.startsWith(tok[0]) && resid.endsWith(tok[1]))
+                    as = cuswildstyle.get(wc);
+            }
+        }
+        if(as == null) {    /* Check for owner style matches */
+            if(ownerstyle.isEmpty() != true) {
+                DefaultDomain dd = region.getOwners();
+                Set<String> play = dd.getPlayers();
+                if(play != null) {
+                    for(String p : play) {
+                        if(as == null) {
+                            as = ownerstyle.get(p.toLowerCase());
+                        }
+                    }
+                }
+                Set<String> grp = dd.getGroups();
+                if(grp != null) {
+                    for(String p : grp) {
+                        if(as == null)
+                            as = ownerstyle.get(p.toLowerCase());
+                    }
+                }
+            }
+        }
         if(as == null)
             as = defstyle;
+
         int sc = 0xFF0000;
         int fc = 0xFF0000;
         try {
@@ -178,9 +211,10 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             else {  /* Unsupported type */
                 return;
             }
-            AreaMarker m = resareas.remove(id); /* Existing area? */
+            String markerid = world.getName() + "_" + id;
+            AreaMarker m = resareas.remove(markerid); /* Existing area? */
             if(m == null) {
-                m = set.createAreaMarker(id, name, false, world.getName(), x, z, false);
+                m = set.createAreaMarker(markerid, name, false, world.getName(), x, z, false);
                 if(m == null)
                     return;
             }
@@ -194,10 +228,10 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             m.setDescription(desc); /* Set popup */
             
             /* Set line and fill properties */
-            addStyle(id, m);
+            addStyle(id, m, region);
 
             /* Add to map */
-            newmap.put(id, m);
+            newmap.put(markerid, m);
         }
     }
     
@@ -288,12 +322,25 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         /* Get style information */
         defstyle = new AreaStyle(cfg, "regionstyle");
         cusstyle = new HashMap<String, AreaStyle>();
+        ownerstyle = new HashMap<String, AreaStyle>();
+        cuswildstyle = new HashMap<String, AreaStyle>();
         ConfigurationSection sect = cfg.getConfigurationSection("custstyle");
         if(sect != null) {
             Set<String> ids = sect.getKeys(false);
             
             for(String id : ids) {
-                cusstyle.put(id, new AreaStyle(cfg, "custstyle." + id, defstyle));
+                if(id.indexOf('|') >= 0)
+                    cuswildstyle.put(id, new AreaStyle(cfg, "custstyle." + id, defstyle));
+                else
+                    cusstyle.put(id, new AreaStyle(cfg, "custstyle." + id, defstyle));
+            }
+        }
+        sect = cfg.getConfigurationSection("ownerstyle");
+        if(sect != null) {
+            Set<String> ids = sect.getKeys(false);
+            
+            for(String id : ids) {
+                ownerstyle.put(id.toLowerCase(), new AreaStyle(cfg, "ownerstyle." + id, defstyle));
             }
         }
         List vis = cfg.getList("visibleregions");
