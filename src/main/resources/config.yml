@@ -31,8 +31,13 @@ visibleregions: [ ]
 hiddenregions: [ ]
   
 # Optional per-region overrides for regionstyle (any defined replace those in regionstyle)
+#  Also supports region IDs with single wildcard '|' pattern
 custstyle:
   customregion1:
     strokeColor: "#00FF00"
-  
 
+# Optional per-owner overrides for regionstyle (lower priority than custstyle) - works for group or user names
+ownerstyle:
+  kingoftheworld:
+    strokecolor: "#C0C0C0"
+    
