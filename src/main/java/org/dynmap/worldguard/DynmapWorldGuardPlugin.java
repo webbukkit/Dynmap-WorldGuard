@@ -309,11 +309,18 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         this.saveConfig();  /* Save updates, if needed */
         
         /* Now, add marker set for mobs (make it transient) */
-        set = markerapi.createMarkerSet("worldguard.markerset", cfg.getString("layer.name", "WorldGuard"), null, false);
+        set = markerapi.getMarkerSet("worldguard.markerset");
+        if(set == null)
+            set = markerapi.createMarkerSet("worldguard.markerset", cfg.getString("layer.name", "WorldGuard"), null, false);
+        else
+            set.setMarkerSetLabel(cfg.getString("layer.name", "WorldGuard"));
         if(set == null) {
             severe("Error creating marker set");
             return;
         }
+        int minzoom = cfg.getInt("layer.minzoom", 0);
+        if(minzoom > 0)
+            set.setMinZoom(minzoom);
         set.setLayerPriority(cfg.getInt("layer.layerprio", 10));
         set.setHideByDefault(cfg.getBoolean("layer.hidebydefault", false));
         use3d = cfg.getBoolean("use3dregions", false);

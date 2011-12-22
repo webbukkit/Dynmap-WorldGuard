@@ -56,13 +56,13 @@
   	<dependency>
   		<groupId>org.dynmap</groupId>
   		<artifactId>dynmap-api</artifactId>
-  		<version>[0.25,)</version>
+  		<version>[0.28,)</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.bukkit</groupId>
   		<artifactId>bukkit</artifactId>
-  		<version>[1.0.0-R1-SNAPSHOT,)</version>
+  		<version>[1.0.1-R1-SNAPSHOT,)</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
