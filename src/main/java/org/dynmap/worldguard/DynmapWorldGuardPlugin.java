@@ -115,14 +115,14 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         return v;
     }
     
-    private boolean isVisible(String id) {
+    private boolean isVisible(String id, String worldname) {
         if((visible != null) && (visible.size() > 0)) {
-            if(visible.contains(id) == false) {
+            if((visible.contains(id) == false) && (visible.contains("world:" + worldname) == false)) {
                 return false;
             }
         }
         if((hidden != null) && (hidden.size() > 0)) {
-            if(hidden.contains(id))
+            if(hidden.contains(id) || hidden.contains("world:" + worldname))
                 return false;
         }
         return true;
@@ -183,7 +183,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         String desc = formatInfoWindow(region);
         
         /* Handle areas */
-        if(isVisible(region.getId())) {
+        if(isVisible(region.getId(), world.getName())) {
             String id = region.getId();
             String tn = region.getTypeName();
             BlockVector l0 = region.getMinimumPoint();
