@@ -96,22 +96,22 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
 
     private String formatInfoWindow(ProtectedRegion region) {
         String v = "<div class=\"regioninfo\">"+infowindow+"</div>";
-        v = v.replaceAll("%regionname%", region.getId());
-        v = v.replaceAll("%playerowners%", region.getOwners().toPlayersString());
-        v = v.replaceAll("%groupowners%", region.getOwners().toGroupsString());
-        v = v.replaceAll("%playermembers%", region.getMembers().toPlayersString());
-        v = v.replaceAll("%groupmembers%", region.getMembers().toGroupsString());
+        v = v.replace("%regionname%", region.getId());
+        v = v.replace("%playerowners%", region.getOwners().toPlayersString());
+        v = v.replace("%groupowners%", region.getOwners().toGroupsString());
+        v = v.replace("%playermembers%", region.getMembers().toPlayersString());
+        v = v.replace("%groupmembers%", region.getMembers().toGroupsString());
         if(region.getParent() != null)
-            v = v.replaceAll("%parent%", region.getParent().getId());
+            v = v.replace("%parent%", region.getParent().getId());
         else
-            v = v.replaceAll("%parent%", "");
-        v = v.replaceAll("%priority%", String.valueOf(region.getPriority()));
+            v = v.replace("%parent%", "");
+        v = v.replace("%priority%", String.valueOf(region.getPriority()));
         Map<Flag<?>, Object> map = region.getFlags();
         String flgs = "";
         for(Flag<?> f : map.keySet()) {
             flgs += f.getName() + ": " + map.get(f).toString() + "<br/>";
         }
-        v = v.replaceAll("%flags%", flgs);
+        v = v.replace("%flags%", flgs);
         return v;
     }
     
