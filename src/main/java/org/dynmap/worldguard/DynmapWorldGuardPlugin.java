@@ -11,10 +11,10 @@ import java.util.logging.Logger;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.Event.Type;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginEnableEvent;
-import org.bukkit.event.server.ServerListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
@@ -60,6 +60,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         int strokeweight;
         String fillcolor;
         double fillopacity;
+        String label;
 
         AreaStyle(FileConfiguration cfg, String path, AreaStyle def) {
             strokecolor = cfg.getString(path+".strokeColor", def.strokecolor);
@@ -67,6 +68,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             strokeweight = cfg.getInt(path+".strokeWeight", def.strokeweight);
             fillcolor = cfg.getString(path+".fillColor", def.fillcolor);
             fillopacity = cfg.getDouble(path+".fillOpacity", def.fillopacity);
+            label = cfg.getString(path+".label", null);
         }
 
         AreaStyle(FileConfiguration cfg, String path) {
@@ -94,9 +96,9 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     
     private Map<String, AreaMarker> resareas = new HashMap<String, AreaMarker>();
 
-    private String formatInfoWindow(ProtectedRegion region) {
+    private String formatInfoWindow(ProtectedRegion region, AreaMarker m) {
         String v = "<div class=\"regioninfo\">"+infowindow+"</div>";
-        v = v.replace("%regionname%", region.getId());
+        v = v.replace("%regionname%", m.getLabel());
         v = v.replace("%playerowners%", region.getOwners().toPlayersString());
         v = v.replace("%groupowners%", region.getOwners().toGroupsString());
         v = v.replace("%playermembers%", region.getMembers().toPlayersString());
@@ -117,19 +119,23 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     
     private boolean isVisible(String id, String worldname) {
         if((visible != null) && (visible.size() > 0)) {
-            if((visible.contains(id) == false) && (visible.contains("world:" + worldname) == false)) {
+            if((visible.contains(id) == false) && (visible.contains("world:" + worldname) == false) &&
+                    (visible.contains(worldname + "/" + id) == false)) {
                 return false;
             }
         }
         if((hidden != null) && (hidden.size() > 0)) {
-            if(hidden.contains(id) || hidden.contains("world:" + worldname))
+            if(hidden.contains(id) || hidden.contains("world:" + worldname) || hidden.contains(worldname + "/" + id))
                 return false;
         }
         return true;
     }
     
-    private void addStyle(String resid, AreaMarker m, ProtectedRegion region) {
-        AreaStyle as = cusstyle.get(resid);
+    private void addStyle(String resid, String worldid, AreaMarker m, ProtectedRegion region) {
+        AreaStyle as = cusstyle.get(worldid + "/" + resid);
+        if(as == null) {
+            as = cusstyle.get(resid);
+        }
         if(as == null) {    /* Check for wildcard style matches */
             for(String wc : cuswildstyle.keySet()) {
                 String[] tok = wc.split("\\|");
@@ -171,6 +177,9 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         }
         m.setLineStyle(as.strokeweight, as.strokeopacity, sc);
         m.setFillStyle(as.fillopacity, fc);
+        if(as.label != null) {
+            m.setLabel(as.label);
+        }
     }
     
     /* Handle specific region */
@@ -178,10 +187,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         String name = region.getId();
         double[] x = null;
         double[] z = null;
-        
-        /* Build popup */
-        String desc = formatInfoWindow(region);
-        
+                
         /* Handle areas */
         if(isVisible(region.getId(), world.getName())) {
             String id = region.getId();
@@ -224,11 +230,14 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             }
             if(use3d) { /* If 3D? */
                 m.setRangeY(l1.getY()+1.0, l0.getY());
-            }
-            m.setDescription(desc); /* Set popup */
-            
+            }            
             /* Set line and fill properties */
-            addStyle(id, m, region);
+            addStyle(id, world.getName(), m, region);
+
+            /* Build popup */
+            String desc = formatInfoWindow(region, m);
+
+            m.setDescription(desc); /* Set popup */
 
             /* Add to map */
             newmap.put(markerid, m);
@@ -260,8 +269,9 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         
     }
 
-    private class OurServerListener extends ServerListener {
-        @Override
+    private class OurServerListener implements Listener {
+        @SuppressWarnings("unused")
+        @EventHandler(priority=EventPriority.MONITOR)
         public void onPluginEnable(PluginEnableEvent event) {
             Plugin p = event.getPlugin();
             String name = p.getDescription().getName();
@@ -289,11 +299,11 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             return;
         }
         wg = (WorldGuardPlugin)p;
+
+        getServer().getPluginManager().registerEvents(new OurServerListener(), this);        
         /* If both enabled, activate */
         if(dynmap.isEnabled() && wg.isEnabled())
             activate();
-        else
-            getServer().getPluginManager().registerEvent(Type.PLUGIN_ENABLE, new OurServerListener(), Priority.Monitor, this);        
     }
 
     private void activate() {
@@ -350,11 +360,11 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
                 ownerstyle.put(id.toLowerCase(), new AreaStyle(cfg, "ownerstyle." + id, defstyle));
             }
         }
-        List vis = cfg.getList("visibleregions");
+        List<String> vis = cfg.getStringList("visibleregions");
         if(vis != null) {
             visible = new HashSet<String>(vis);
         }
-        List hid = cfg.getList("hiddenregions");
+        List<String> hid = cfg.getStringList("hiddenregions");
         if(hid != null) {
             hidden = new HashSet<String>(hid);
         }

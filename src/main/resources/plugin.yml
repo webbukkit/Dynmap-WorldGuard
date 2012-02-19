@@ -2,5 +2,5 @@ name: Dynmap-WorldGuard
 main: org.dynmap.worldguard.DynmapWorldGuardPlugin
 version: "${project.version}"
 author: mikeprimm
-softdepend: [ dynmap, WorldGuard ]
+depend: [ dynmap, WorldGuard ]
 
