@@ -45,3 +45,7 @@ ownerstyle:
   kingoftheworld:
     strokecolor: "#C0C0C0"
     
+    
+# Limit depth of child regions (1=just top regions, 2=top plus children of top)
+maxdepth: 16
+    

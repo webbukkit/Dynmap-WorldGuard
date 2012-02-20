@@ -53,6 +53,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     Set<String> visible;
     Set<String> hidden;
     boolean stop; 
+    int maxdepth;
     
     private static class AreaStyle {
         String strokecolor;
@@ -255,6 +256,14 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             
             Map<String,ProtectedRegion> regions = rm.getRegions();  /* Get all the regions */
             for(ProtectedRegion pr : regions.values()) {
+                int depth = 1;
+                ProtectedRegion p = pr;
+                while(p.getParent() != null) {
+                    depth++;
+                    p = p.getParent();
+                }
+                if(depth > maxdepth)
+                    continue;
                 handleRegion(w, pr, newmap);
             }
         }
@@ -335,6 +344,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         set.setHideByDefault(cfg.getBoolean("layer.hidebydefault", false));
         use3d = cfg.getBoolean("use3dregions", false);
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
+        maxdepth = cfg.getInt("maxdepth", 16);
 
         /* Get style information */
         defstyle = new AreaStyle(cfg, "regionstyle");
