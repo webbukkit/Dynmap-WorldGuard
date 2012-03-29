@@ -62,13 +62,13 @@
   	<dependency>
   		<groupId>org.bukkit</groupId>
   		<artifactId>bukkit</artifactId>
-  		<version>[1.0.1-R1-SNAPSHOT,)</version>
+  		<version>[1.2.4-R1.0,1.7)</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WorldGuard</artifactId>
-  		<version>5.3</version>
+  		<version>5.5.2</version>
   		<scope>system</scope>
   		<systemPath>${project.basedir}/WorldGuard.jar</systemPath>
   	</dependency>
