@@ -56,28 +56,26 @@
   	<dependency>
   		<groupId>org.dynmap</groupId>
   		<artifactId>dynmap-api</artifactId>
-  		<version>[0.28,)</version>
-  		<scope>compile</scope>
+  		<version>[0.80,)</version>
   	</dependency>
   	<dependency>
   		<groupId>org.bukkit</groupId>
   		<artifactId>bukkit</artifactId>
-  		<version>[1.2.4-R1.0,1.7)</version>
-  		<scope>compile</scope>
+  		<version>[1.3.1-R1.0,1.7)</version>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WorldGuard</artifactId>
-  		<version>5.5.2</version>
+  		<version>5.5.3</version>
   		<scope>system</scope>
-  		<systemPath>${project.basedir}/WorldGuard.jar</systemPath>
+  		<systemPath>${project.basedir}/WorldGuard-5.5.3.jar</systemPath>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WorldEdit</artifactId>
-  		<version>4.7</version>
+  		<version>5.4.2</version>
   		<scope>system</scope>
-  		<systemPath>${project.basedir}/WorldEdit.jar</systemPath>
+  		<systemPath>${project.basedir}/worldedit-5.4.2.jar</systemPath>
   	</dependency>
   </dependencies>
 </project>

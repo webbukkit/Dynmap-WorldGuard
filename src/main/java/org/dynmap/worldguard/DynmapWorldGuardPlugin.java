@@ -1,5 +1,6 @@
 package org.dynmap.worldguard;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -57,6 +58,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     
     private static class AreaStyle {
         String strokecolor;
+        String unownedstrokecolor;
         double strokeopacity;
         int strokeweight;
         String fillcolor;
@@ -65,6 +67,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
 
         AreaStyle(FileConfiguration cfg, String path, AreaStyle def) {
             strokecolor = cfg.getString(path+".strokeColor", def.strokecolor);
+            unownedstrokecolor = cfg.getString(path+".unownedStrokeColor", def.unownedstrokecolor);
             strokeopacity = cfg.getDouble(path+".strokeOpacity", def.strokeopacity);
             strokeweight = cfg.getInt(path+".strokeWeight", def.strokeweight);
             fillcolor = cfg.getString(path+".fillColor", def.fillcolor);
@@ -74,6 +77,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
 
         AreaStyle(FileConfiguration cfg, String path) {
             strokecolor = cfg.getString(path+".strokeColor", "#FF0000");
+            unownedstrokecolor = cfg.getString(path+".unownedStrokeColor", "#00FF00");
             strokeopacity = cfg.getDouble(path+".strokeOpacity", 0.8);
             strokeweight = cfg.getInt(path+".strokeWeight", 3);
             fillcolor = cfg.getString(path+".fillColor", "#FF0000");
@@ -169,11 +173,19 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         if(as == null)
             as = defstyle;
 
+        boolean unowned = false;
+        if((region.getOwners().getPlayers().size() == 0) &&
+                (region.getOwners().getGroups().size() == 0)) {
+            unowned = true;
+        }
         int sc = 0xFF0000;
         int fc = 0xFF0000;
         try {
-            sc = Integer.parseInt(as.strokecolor.substring(1), 16);
-            fc = Integer.parseInt(as.fillcolor.substring(1), 16);
+            if(unowned)
+                sc = Integer.parseInt(as.unownedstrokecolor.substring(1), 16);
+            else
+                sc = Integer.parseInt(as.strokecolor.substring(1), 16);
+           fc = Integer.parseInt(as.fillcolor.substring(1), 16);
         } catch (NumberFormatException nfx) {
         }
         m.setLineStyle(as.strokeweight, as.strokeopacity, sc);
@@ -313,8 +325,17 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         /* If both enabled, activate */
         if(dynmap.isEnabled() && wg.isEnabled())
             activate();
+        /* Start up metrics */
+        try {
+            MetricsLite ml = new MetricsLite(this);
+            ml.start();
+        } catch (IOException iox) {
+            
+        }
     }
 
+    private boolean reload = false;
+    
     private void activate() {
         /* Now, get markers API */
         markerapi = api.getMarkerAPI();
@@ -323,6 +344,12 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             return;
         }
         /* Load configuration */
+        if(reload) {
+            this.reloadConfig();
+        }
+        else {
+            reload = true;
+        }
         FileConfiguration cfg = getConfig();
         cfg.options().copyDefaults(true);   /* Load defaults, if needed */
         this.saveConfig();  /* Save updates, if needed */
