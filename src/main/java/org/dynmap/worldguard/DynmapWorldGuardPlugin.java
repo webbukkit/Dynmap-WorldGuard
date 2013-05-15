@@ -68,6 +68,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         String fillcolor;
         double fillopacity;
         String label;
+        boolean boost;
 
         AreaStyle(FileConfiguration cfg, String path, AreaStyle def) {
             strokecolor = cfg.getString(path+".strokeColor", def.strokecolor);
@@ -77,6 +78,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             fillcolor = cfg.getString(path+".fillColor", def.fillcolor);
             fillopacity = cfg.getDouble(path+".fillOpacity", def.fillopacity);
             label = cfg.getString(path+".label", null);
+            boost = cfg.getBoolean(path+".boost", def.boost);
         }
 
         AreaStyle(FileConfiguration cfg, String path) {
@@ -86,6 +88,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             strokeweight = cfg.getInt(path+".strokeWeight", 3);
             fillcolor = cfg.getString(path+".fillColor", "#FF0000");
             fillopacity = cfg.getDouble(path+".fillOpacity", 0.35);
+            boost = cfg.getBoolean(path+".boost", false);
         }
     }
     
@@ -197,6 +200,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         if(as.label != null) {
             m.setLabel(as.label);
         }
+        m.setBoostFlag(as.boost);
     }
     
     /* Handle specific region */
