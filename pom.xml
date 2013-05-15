@@ -81,5 +81,12 @@
   		<scope>system</scope>
   		<systemPath>${project.basedir}/worldedit-5.5.6.jar</systemPath>
   	</dependency>
+  	<dependency>
+  		<groupId>com.sk89q</groupId>
+  		<artifactId>WGCustomFlags</artifactId>
+  		<version>1.5.2</version>
+  		<scope>system</scope>
+  		<systemPath>${project.basedir}/WGCustomFlags-1.5.2.jar</systemPath>
+  	</dependency>
   </dependencies>
 </project>

@@ -24,10 +24,12 @@ import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerSet;
 
+import com.mewin.WGCustomFlags.WGCustomFlagsPlugin;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.BlockVector2D;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.domains.DefaultDomain;
+import com.sk89q.worldguard.protection.flags.BooleanFlag;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
@@ -36,10 +38,12 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
     private static final String DEF_INFOWINDOW = "<div class=\"infowindow\"><span style=\"font-size:120%;\">%regionname%</span><br /> Owner <span style=\"font-weight:bold;\">%playerowners%</span><br />Flags<br /><span style=\"font-weight:bold;\">%flags%</span></div>";
+    public static final String BOOST_FLAG = "dynmap-boost";
     Plugin dynmap;
     DynmapAPI api;
     MarkerAPI markerapi;
     WorldGuardPlugin wg;
+    BooleanFlag boost_flag;
     
     FileConfiguration cfg;
     MarkerSet set;
@@ -68,7 +72,6 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         String fillcolor;
         double fillopacity;
         String label;
-        boolean boost;
 
         AreaStyle(FileConfiguration cfg, String path, AreaStyle def) {
             strokecolor = cfg.getString(path+".strokeColor", def.strokecolor);
@@ -78,7 +81,6 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             fillcolor = cfg.getString(path+".fillColor", def.fillcolor);
             fillopacity = cfg.getDouble(path+".fillOpacity", def.fillopacity);
             label = cfg.getString(path+".label", null);
-            boost = cfg.getBoolean(path+".boost", def.boost);
         }
 
         AreaStyle(FileConfiguration cfg, String path) {
@@ -88,7 +90,6 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             strokeweight = cfg.getInt(path+".strokeWeight", 3);
             fillcolor = cfg.getString(path+".fillColor", "#FF0000");
             fillopacity = cfg.getDouble(path+".fillOpacity", 0.35);
-            boost = cfg.getBoolean(path+".boost", false);
         }
     }
     
@@ -200,7 +201,10 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         if(as.label != null) {
             m.setLabel(as.label);
         }
-        m.setBoostFlag(as.boost);
+        if (boost_flag != null) {
+            Boolean b = region.getFlag(boost_flag);
+            m.setBoostFlag((b == null)?false:b.booleanValue());
+        }
     }
     
     /* Handle specific region */
@@ -330,6 +334,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         wg = (WorldGuardPlugin)p;
 
         getServer().getPluginManager().registerEvents(new OurServerListener(), this);        
+        
+        registerCustomFlags();
         /* If both enabled, activate */
         if(dynmap.isEnabled() && wg.isEnabled())
             activate();
@@ -342,9 +348,36 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         }
     }
 
+    private WGCustomFlagsPlugin getWGCustomFlags()
+    {
+      Plugin plugin = getServer().getPluginManager().getPlugin("WGCustomFlags");
+      
+      if (plugin == null || !(plugin instanceof WGCustomFlagsPlugin))
+      {
+        return null;
+      }
+
+      return (WGCustomFlagsPlugin) plugin;
+    }
+    
+    private void registerCustomFlags() {
+        try {
+            WGCustomFlagsPlugin cf = getWGCustomFlags();
+            if (cf != null) {
+                BooleanFlag bf = new BooleanFlag(BOOST_FLAG);
+                cf.addCustomFlag(bf);
+                boost_flag = bf;
+            }
+        } catch (Exception x) {
+        }
+        if (boost_flag == null) {
+            log.info("Custom flag '" + BOOST_FLAG + "' not registered - WGCustomFlags not found");
+        }
+    }
+    
     private boolean reload = false;
     
-    private void activate() {
+    private void activate() {        
         /* Now, get markers API */
         markerapi = api.getMarkerAPI();
         if(markerapi == null) {
