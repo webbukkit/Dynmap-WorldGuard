@@ -60,33 +60,33 @@
   	<dependency>
   		<groupId>org.dynmap</groupId>
   		<artifactId>dynmap-api</artifactId>
-  		<version>1.7</version>
+  		<version>1.9</version>
   	</dependency>
   	<dependency>
   		<groupId>org.bukkit</groupId>
   		<artifactId>bukkit</artifactId>
-  		<version>1.5.2-R0.1</version>
+  		<version>1.6.4-R2.0</version>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WorldGuard</artifactId>
-  		<version>5.7.3</version>
+  		<version>5.8</version>
   		<scope>system</scope>
-  		<systemPath>${project.basedir}/worldguard-5.7.3.jar</systemPath>
+  		<systemPath>${project.basedir}/worldguard-5.8.jar</systemPath>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WorldEdit</artifactId>
-  		<version>5.5.6</version>
+  		<version>5.5.8</version>
   		<scope>system</scope>
-  		<systemPath>${project.basedir}/worldedit-5.5.6.jar</systemPath>
+  		<systemPath>${project.basedir}/worldedit-5.5.8.jar</systemPath>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WGCustomFlags</artifactId>
-  		<version>1.5.2</version>
+  		<version>1.6</version>
   		<scope>system</scope>
-  		<systemPath>${project.basedir}/WGCustomFlags-1.5.2.jar</systemPath>
+  		<systemPath>${project.basedir}/WGCustomFlags-1.6.jar</systemPath>
   	</dependency>
   </dependencies>
 </project>
