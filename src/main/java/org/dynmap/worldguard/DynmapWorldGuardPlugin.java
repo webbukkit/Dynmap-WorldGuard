@@ -1,6 +1,7 @@
 package org.dynmap.worldguard;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +45,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     MarkerAPI markerapi;
     WorldGuardPlugin wg;
     BooleanFlag boost_flag;
+    int updatesPerTick = 20;
     
     FileConfiguration cfg;
     MarkerSet set;
@@ -98,13 +100,6 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     }
     public static void severe(String msg) {
         log.log(Level.SEVERE, msg);
-    }
-
-    private class WorldGuardUpdate implements Runnable {
-        public void run() {
-            if(!stop)
-                updateRegions();
-        }
     }
     
     private Map<String, AreaMarker> resareas = new HashMap<String, AreaMarker>();
@@ -269,17 +264,50 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         }
     }
     
-    /* Update worldguard region information */
-    private void updateRegions() {
+    private class UpdateJob implements Runnable {
         Map<String,AreaMarker> newmap = new HashMap<String,AreaMarker>(); /* Build new map */
- 
-        /* Loop through worlds */
-        for(World w : getServer().getWorlds()) {
-            RegionManager rm = wg.getRegionManager(w); /* Get region manager for world */
-            if(rm == null) continue;
-            
-            Map<String,ProtectedRegion> regions = rm.getRegions();  /* Get all the regions */
-            for(ProtectedRegion pr : regions.values()) {
+        List<World> worldsToDo = null;
+        List<ProtectedRegion> regionsToDo = null;
+        World curworld = null;
+        
+        public void run() {
+            if (stop) {
+                return;
+            }
+            // If worlds list isn't primed, prime it
+            if (worldsToDo == null) {
+                worldsToDo = new ArrayList<World>(getServer().getWorlds());
+            }
+            while (regionsToDo == null) {  // No pending regions for world
+                if (worldsToDo.isEmpty()) { // No more worlds?
+                    /* Now, review old map - anything left is gone */
+                    for(AreaMarker oldm : resareas.values()) {
+                        oldm.deleteMarker();
+                    }
+                    /* And replace with new map */
+                    resareas = newmap;
+                    // Set up for next update (new job)
+                    getServer().getScheduler().scheduleSyncDelayedTask(DynmapWorldGuardPlugin.this, new UpdateJob(), updperiod);
+                    return;
+                }
+                else {
+                    curworld = worldsToDo.remove(0);
+                    RegionManager rm = wg.getRegionManager(curworld); /* Get region manager for world */
+                    if(rm != null) {
+                        Map<String,ProtectedRegion> regions = rm.getRegions();  /* Get all the regions */
+                        if ((regions != null) && (regions.isEmpty() == false)) {
+                            regionsToDo = new ArrayList<ProtectedRegion>(regions.values());
+                        }
+                    }
+                }
+            }
+            /* Now, process up to limit regions */
+            for (int i = 0; i < updatesPerTick; i++) {
+                if (regionsToDo.isEmpty()) {
+                    regionsToDo = null;
+                    break;
+                }
+                ProtectedRegion pr = regionsToDo.remove(regionsToDo.size()-1);
                 int depth = 1;
                 ProtectedRegion p = pr;
                 while(p.getParent() != null) {
@@ -288,18 +316,11 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
                 }
                 if(depth > maxdepth)
                     continue;
-                handleRegion(w, pr, newmap);
+                handleRegion(curworld, pr, newmap);
             }
+            // Tick next step in the job
+            getServer().getScheduler().scheduleSyncDelayedTask(DynmapWorldGuardPlugin.this, this, 1);
         }
-        /* Now, review old map - anything left is gone */
-        for(AreaMarker oldm : resareas.values()) {
-            oldm.deleteMarker();
-        }
-        /* And replace with new map */
-        resareas = newmap;
-        
-        getServer().getScheduler().scheduleSyncDelayedTask(this, new WorldGuardUpdate(), updperiod);
-        
     }
 
     private class OurServerListener implements Listener {
@@ -413,6 +434,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         use3d = cfg.getBoolean("use3dregions", false);
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
         maxdepth = cfg.getInt("maxdepth", 16);
+        updatesPerTick = cfg.getInt("updates-per-tick", 20);
 
         /* Get style information */
         defstyle = new AreaStyle(cfg, "regionstyle");
@@ -453,7 +475,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         updperiod = (long)(per*20);
         stop = false;
         
-        getServer().getScheduler().scheduleSyncDelayedTask(this, new WorldGuardUpdate(), 40);   /* First time is 2 seconds */
+        getServer().getScheduler().scheduleSyncDelayedTask(this, new UpdateJob(), 40);   /* First time is 2 seconds */
         
         info("version " + this.getDescription().getVersion() + " is activated");
     }

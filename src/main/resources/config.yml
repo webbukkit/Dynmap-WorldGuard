@@ -50,3 +50,5 @@ ownerstyle:
 # Limit depth of child regions (1=just top regions, 2=top plus children of top)
 maxdepth: 16
     
+# Limit number of regions processed per tick (avoid lag spikes on servers with lots of regions)
+updates-per-tick: 20
