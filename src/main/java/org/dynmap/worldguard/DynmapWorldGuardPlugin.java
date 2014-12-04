@@ -35,6 +35,7 @@ import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.sk89q.worldguard.protection.regions.RegionType;
 
 public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
@@ -211,11 +212,11 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         /* Handle areas */
         if(isVisible(region.getId(), world.getName())) {
             String id = region.getId();
-            String tn = region.getTypeName();
+            RegionType tn = region.getType();
             BlockVector l0 = region.getMinimumPoint();
             BlockVector l1 = region.getMaximumPoint();
 
-            if(tn.equalsIgnoreCase("cuboid")) { /* Cubiod region? */
+            if(tn == RegionType.CUBOID) { /* Cubiod region? */
                 /* Make outline */
                 x = new double[4];
                 z = new double[4];
@@ -224,7 +225,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
                 x[2] = l1.getX() + 1.0; z[2] = l1.getZ()+1.0;
                 x[3] = l1.getX() + 1.0; z[3] = l0.getZ();
             }
-            else if(tn.equalsIgnoreCase("polygon")) {
+            else if(tn == RegionType.POLYGON) {
                 ProtectedPolygonalRegion ppr = (ProtectedPolygonalRegion)region;
                 List<BlockVector2D> points = ppr.getPoints();
                 x = new double[points.size()];
@@ -324,7 +325,6 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     }
 
     private class OurServerListener implements Listener {
-        @SuppressWarnings("unused")
         @EventHandler(priority=EventPriority.MONITOR)
         public void onPluginEnable(PluginEnableEvent event) {
             Plugin p = event.getPlugin();
