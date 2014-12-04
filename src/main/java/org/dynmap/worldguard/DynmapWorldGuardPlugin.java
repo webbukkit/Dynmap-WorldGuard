@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,12 +31,15 @@ import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.BlockVector2D;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.domains.DefaultDomain;
+import com.sk89q.worldguard.domains.PlayerDomain;
 import com.sk89q.worldguard.protection.flags.BooleanFlag;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionType;
+import com.sk89q.worldguard.util.profile.Profile;
+import com.sk89q.worldguard.util.profile.cache.ProfileCache;
 
 public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
@@ -47,6 +51,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     WorldGuardPlugin wg;
     BooleanFlag boost_flag;
     int updatesPerTick = 20;
+    ProfileCache pc;
     
     FileConfiguration cfg;
     MarkerSet set;
@@ -108,9 +113,9 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     private String formatInfoWindow(ProtectedRegion region, AreaMarker m) {
         String v = "<div class=\"regioninfo\">"+infowindow+"</div>";
         v = v.replace("%regionname%", m.getLabel());
-        v = v.replace("%playerowners%", region.getOwners().toPlayersString());
+        v = v.replace("%playerowners%", region.getOwners().toPlayersString(pc));
         v = v.replace("%groupowners%", region.getOwners().toGroupsString());
-        v = v.replace("%playermembers%", region.getMembers().toPlayersString());
+        v = v.replace("%playermembers%", region.getMembers().toPlayersString(pc));
         v = v.replace("%groupmembers%", region.getMembers().toGroupsString());
         if(region.getParent() != null)
             v = v.replace("%parent%", region.getParent().getId());
@@ -157,19 +162,37 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         if(as == null) {    /* Check for owner style matches */
             if(ownerstyle.isEmpty() != true) {
                 DefaultDomain dd = region.getOwners();
-                Set<String> play = dd.getPlayers();
-                if(play != null) {
-                    for(String p : play) {
+                PlayerDomain pd = dd.getPlayerDomain();
+                if(pd != null) {
+                    for(String p : pd.getPlayers()) {
                         if(as == null) {
                             as = ownerstyle.get(p.toLowerCase());
+                            if (as != null) break;
+                        }
+                    }
+                    if (as == null) {
+                        for(UUID uuid : pd.getUniqueIds()) {
+                            as = ownerstyle.get(uuid.toString());
+                            if (as != null) break;
+                        }
+                    }
+                    if (as == null) {
+                        for(UUID uuid : pd.getUniqueIds()) {
+                            String p = resolveUUID(uuid);
+                            if (p != null) {
+                                as = ownerstyle.get(p.toLowerCase());
+                                if (as != null) break;
+                            }
                         }
                     }
                 }
-                Set<String> grp = dd.getGroups();
-                if(grp != null) {
-                    for(String p : grp) {
-                        if(as == null)
+                if (as == null) {
+                    Set<String> grp = dd.getGroups();
+                    if(grp != null) {
+                        for(String p : grp) {
                             as = ownerstyle.get(p.toLowerCase());
+                            if (as != null) break;
+                        }
                     }
                 }
             }
@@ -201,6 +224,14 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             Boolean b = region.getFlag(boost_flag);
             m.setBoostFlag((b == null)?false:b.booleanValue());
         }
+    }
+    
+    private String resolveUUID(UUID uuid) {
+        Profile p = pc.getIfPresent(uuid);
+        if (p != null) {
+            return p.getName();
+        }
+        return null;
     }
     
     /* Handle specific region */
@@ -353,7 +384,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             return;
         }
         wg = (WorldGuardPlugin)p;
-
+        pc = wg.getProfileCache();
+        
         getServer().getPluginManager().registerEvents(new OurServerListener(), this);        
         
         registerCustomFlags();
