@@ -70,16 +70,16 @@
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WorldGuard</artifactId>
-  		<version>6.0.0-SNAPSHOT</version>
+  		<version>6.0.0-beta-03</version>
   		<scope>system</scope>
-  		<systemPath>${project.basedir}/worldguard-6.0.0-SNAPSHOT.jar</systemPath>
+  		<systemPath>${project.basedir}/worldguard-6.0.0-beta-03.jar</systemPath>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WorldEdit</artifactId>
-  		<version>6.0.0-SNAPSHOT</version>
+  		<version>6.0</version>
   		<scope>system</scope>
-  		<systemPath>${project.basedir}/WorldEdit-6.0.0-SNAPSHOT.jar</systemPath>
+  		<systemPath>${project.basedir}/worldedit-bukkit-6.0.jar</systemPath>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
