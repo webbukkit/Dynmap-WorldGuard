@@ -202,6 +202,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
 
         boolean unowned = false;
         if((region.getOwners().getPlayers().size() == 0) &&
+                (region.getOwners().getUniqueIds().size() == 0 )&&
                 (region.getOwners().getGroups().size() == 0)) {
             unowned = true;
         }
