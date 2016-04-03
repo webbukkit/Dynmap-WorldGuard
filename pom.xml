@@ -43,14 +43,6 @@
 			</releases>
 			<snapshots>
 			</snapshots>
-			<id>bukkit-repo</id>
-			<url>http://repo.bukkit.org/content/repositories/releases/</url>
-		</repository>
-		<repository>
-			<releases>
-			</releases>
-			<snapshots>
-			</snapshots>
 			<id>dynmap-repo</id>
 			<url>http://repo.mikeprimm.com/</url>
 		</repository>
@@ -58,9 +50,9 @@
   
   <dependencies>
   	<dependency>
-  		<groupId>org.dynmap</groupId>
+  		<groupId>us.dynmap</groupId>
   		<artifactId>dynmap-api</artifactId>
-  		<version>1.9</version>
+  		<version>2.2-SNAPSHOT</version>
   	</dependency>
   	<dependency>
   		<groupId>org.bukkit</groupId>
@@ -70,16 +62,16 @@
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WorldGuard</artifactId>
-  		<version>6.0.0-beta-03</version>
+  		<version>6.1</version>
   		<scope>system</scope>
-  		<systemPath>${project.basedir}/worldguard-6.0.0-beta-03.jar</systemPath>
+  		<systemPath>${project.basedir}/worldguard-6.1.jar</systemPath>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
   		<artifactId>WorldEdit</artifactId>
-  		<version>6.0</version>
+  		<version>6.1</version>
   		<scope>system</scope>
-  		<systemPath>${project.basedir}/worldedit-bukkit-6.0.jar</systemPath>
+  		<systemPath>${project.basedir}/worldedit-bukkit-6.1.jar</systemPath>
   	</dependency>
   	<dependency>
   		<groupId>com.sk89q</groupId>
