@@ -238,6 +238,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     /* Handle specific region */
     private void handleRegion(World world, ProtectedRegion region, Map<String, AreaMarker> newmap) {
         String name = region.getId();
+        /* Make first letter uppercase */
+        name = name.substring(0, 1).toUpperCase() + name.substring(1);
         double[] x = null;
         double[] z = null;
                 
