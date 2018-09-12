@@ -415,7 +415,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         	log.info("Error registering flag - " + x.getMessage());
         }
         if (boost_flag == null) {
-            log.info("Custom flag '" + BOOST_FLAG + "' not registered - WGCustomFlags not found");
+            log.info("Custom flag '" + BOOST_FLAG + "' not registered");
         }
     }
     
