@@ -11,7 +11,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.bukkit.World;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
@@ -26,20 +26,23 @@ import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerSet;
 
-import com.mewin.WGCustomFlags.WGCustomFlagsPlugin;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.BlockVector2D;
+import com.sk89q.worldedit.world.World;
+import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.domains.PlayerDomain;
+import com.sk89q.worldguard.internal.platform.WorldGuardPlatform;
 import com.sk89q.worldguard.protection.flags.BooleanFlag;
 import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionType;
-import com.sk89q.worldguard.util.profile.Profile;
-import com.sk89q.worldguard.util.profile.cache.ProfileCache;
 
 public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
@@ -51,8 +54,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     WorldGuardPlugin wg;
     BooleanFlag boost_flag;
     int updatesPerTick = 20;
-    ProfileCache pc;
-    
+
     FileConfiguration cfg;
     MarkerSet set;
     long updperiod;
@@ -70,6 +72,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     @Override
     public void onLoad() {
         log = this.getLogger();
+        this.registerCustomFlags();
     }
     
     private static class AreaStyle {
@@ -109,13 +112,15 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     }
     
     private Map<String, AreaMarker> resareas = new HashMap<String, AreaMarker>();
+	private WorldGuardPlatform platform;
+	public WorldGuardPlatform p;
 
     private String formatInfoWindow(ProtectedRegion region, AreaMarker m) {
         String v = "<div class=\"regioninfo\">"+infowindow+"</div>";
         v = v.replace("%regionname%", m.getLabel());
-        v = v.replace("%playerowners%", region.getOwners().toPlayersString(pc));
+		v = v.replace("%playerowners%", region.getOwners().toPlayersString());
         v = v.replace("%groupowners%", region.getOwners().toGroupsString());
-        v = v.replace("%playermembers%", region.getMembers().toPlayersString(pc));
+        v = v.replace("%playermembers%", region.getMembers().toPlayersString());
         v = v.replace("%groupmembers%", region.getMembers().toGroupsString());
         if(region.getParent() != null)
             v = v.replace("%parent%", region.getParent().getId());
@@ -177,8 +182,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
                         }
                     }
                     if (as == null) {
-                        for(UUID uuid : pd.getUniqueIds()) {
-                            String p = resolveUUID(uuid);
+                    	for(String p : pd.getPlayers()) {
                             if (p != null) {
                                 as = ownerstyle.get(p.toLowerCase());
                                 if (as != null) break;
@@ -226,15 +230,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             m.setBoostFlag((b == null)?false:b.booleanValue());
         }
     }
-    
-    private String resolveUUID(UUID uuid) {
-        Profile p = pc.getIfPresent(uuid);
-        if (p != null) {
-            return p.getName();
-        }
-        return null;
-    }
-    
+        
     /* Handle specific region */
     private void handleRegion(World world, ProtectedRegion region, Map<String, AreaMarker> newmap) {
         String name = region.getId();
@@ -311,7 +307,11 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             }
             // If worlds list isn't primed, prime it
             if (worldsToDo == null) {
-                worldsToDo = new ArrayList<World>(getServer().getWorlds());
+            	List<org.bukkit.World> w = Bukkit.getWorlds();
+                worldsToDo = new ArrayList<World>();
+                for (org.bukkit.World wrld : w) {
+                	worldsToDo.add(platform.getWorldByName(wrld.getName()));
+                }
             }
             while (regionsToDo == null) {  // No pending regions for world
                 if (worldsToDo.isEmpty()) { // No more worlds?
@@ -327,7 +327,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
                 }
                 else {
                     curworld = worldsToDo.remove(0);
-                    RegionManager rm = wg.getRegionManager(curworld); /* Get region manager for world */
+                    RegionContainer rc = platform.getRegionContainer();
+                    RegionManager rm = rc.get(curworld); /* Get region manager for world */
                     if(rm != null) {
                         Map<String,ProtectedRegion> regions = rm.getRegions();  /* Get all the regions */
                         if ((regions != null) && (regions.isEmpty() == false)) {
@@ -387,11 +388,11 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             return;
         }
         wg = (WorldGuardPlugin)p;
-        pc = wg.getProfileCache();
+        
+        platform = WorldGuard.getInstance().getPlatform();
         
         getServer().getPluginManager().registerEvents(new OurServerListener(), this);        
         
-        registerCustomFlags();
         /* If both enabled, activate */
         if(dynmap.isEnabled() && wg.isEnabled())
             activate();
@@ -403,28 +404,15 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             
         }
     }
-
-    private WGCustomFlagsPlugin getWGCustomFlags()
-    {
-      Plugin plugin = getServer().getPluginManager().getPlugin("WGCustomFlags");
-      
-      if (plugin == null || !(plugin instanceof WGCustomFlagsPlugin))
-      {
-        return null;
-      }
-
-      return (WGCustomFlagsPlugin) plugin;
-    }
     
     private void registerCustomFlags() {
         try {
-            WGCustomFlagsPlugin cf = getWGCustomFlags();
-            if (cf != null) {
-                BooleanFlag bf = new BooleanFlag(BOOST_FLAG);
-                cf.addCustomFlag(bf);
-                boost_flag = bf;
-            }
+            BooleanFlag bf = new BooleanFlag(BOOST_FLAG);
+            FlagRegistry fr = WorldGuard.getInstance().getFlagRegistry();
+        	fr.register(bf);
+            boost_flag = bf;
         } catch (Exception x) {
+        	log.info("Error registering flag - " + x.getMessage());
         }
         if (boost_flag == null) {
             log.info("Custom flag '" + BOOST_FLAG + "' not registered - WGCustomFlags not found");
