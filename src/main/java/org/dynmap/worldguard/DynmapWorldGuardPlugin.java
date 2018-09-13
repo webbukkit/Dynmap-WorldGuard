@@ -43,6 +43,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionType;
+import com.sk89q.worldguard.util.profile.cache.ProfileCache;
 
 public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
@@ -52,6 +53,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     DynmapAPI api;
     MarkerAPI markerapi;
     WorldGuardPlugin wg;
+	private WorldGuardPlatform platform;
+	private ProfileCache cache;
     BooleanFlag boost_flag;
     int updatesPerTick = 20;
 
@@ -112,15 +115,13 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     }
     
     private Map<String, AreaMarker> resareas = new HashMap<String, AreaMarker>();
-	private WorldGuardPlatform platform;
-	public WorldGuardPlatform p;
 
     private String formatInfoWindow(ProtectedRegion region, AreaMarker m) {
         String v = "<div class=\"regioninfo\">"+infowindow+"</div>";
         v = v.replace("%regionname%", m.getLabel());
-		v = v.replace("%playerowners%", region.getOwners().toPlayersString());
+		v = v.replace("%playerowners%", region.getOwners().toPlayersString(cache));
         v = v.replace("%groupowners%", region.getOwners().toGroupsString());
-        v = v.replace("%playermembers%", region.getMembers().toPlayersString());
+        v = v.replace("%playermembers%", region.getMembers().toPlayersString(cache));
         v = v.replace("%groupmembers%", region.getMembers().toGroupsString());
         if(region.getParent() != null)
             v = v.replace("%parent%", region.getParent().getId());
@@ -390,6 +391,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         wg = (WorldGuardPlugin)p;
         
         platform = WorldGuard.getInstance().getPlatform();
+        cache = WorldGuard.getInstance().getProfileCache();
         
         getServer().getPluginManager().registerEvents(new OurServerListener(), this);        
         
