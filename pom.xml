@@ -73,5 +73,5 @@
   		<systemPath>${project.basedir}/worldedit-bukkit-7.0.0-beta-04.jar</systemPath>
   	</dependency>
   </dependencies>
-  <version>1.1-alpha-2</version>
+  <version>1.1-SNAPSHOT</version>
 </project>
