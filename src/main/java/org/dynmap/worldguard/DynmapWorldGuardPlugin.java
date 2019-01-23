@@ -30,7 +30,6 @@ import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.domains.PlayerDomain;
 import com.sk89q.worldguard.internal.platform.WorldGuardPlatform;
@@ -42,7 +41,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionType;
-import com.sk89q.worldguard.util.profile.cache.ProfileCache;
 
 public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
@@ -51,9 +49,6 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     Plugin dynmap;
     DynmapAPI api;
     MarkerAPI markerapi;
-    WorldGuardPlugin wg;
-	private WorldGuardPlatform platform;
-	private ProfileCache cache;
     BooleanFlag boost_flag;
     int updatesPerTick = 20;
 
@@ -118,9 +113,9 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     private String formatInfoWindow(ProtectedRegion region, AreaMarker m) {
         String v = "<div class=\"regioninfo\">"+infowindow+"</div>";
         v = v.replace("%regionname%", m.getLabel());
-		v = v.replace("%playerowners%", region.getOwners().toPlayersString(cache));
+        v = v.replace("%playerowners%", region.getOwners().toPlayersString(WorldGuard.getInstance().getProfileCache()));
         v = v.replace("%groupowners%", region.getOwners().toGroupsString());
-        v = v.replace("%playermembers%", region.getMembers().toPlayersString(cache));
+        v = v.replace("%playermembers%", region.getMembers().toPlayersString(WorldGuard.getInstance().getProfileCache()));
         v = v.replace("%groupmembers%", region.getMembers().toGroupsString());
         if(region.getParent() != null)
             v = v.replace("%parent%", region.getParent().getId());
@@ -310,7 +305,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             	List<org.bukkit.World> w = Bukkit.getWorlds();
                 worldsToDo = new ArrayList<World>();
                 for (org.bukkit.World wrld : w) {
-                	worldsToDo.add(platform.getWorldByName(wrld.getName()));
+                	worldsToDo.add(WorldGuard.getInstance().getPlatform().getMatcher().getWorldByName(wrld.getName()));
                 }
             }
             while (regionsToDo == null) {  // No pending regions for world
@@ -327,7 +322,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
                 }
                 else {
                     curworld = worldsToDo.remove(0);
-                    RegionContainer rc = platform.getRegionContainer();
+                    RegionContainer rc = WorldGuard.getInstance().getPlatform().getRegionContainer();
                     RegionManager rm = rc.get(curworld); /* Get region manager for world */
                     if(rm != null) {
                         Map<String,ProtectedRegion> regions = rm.getRegions();  /* Get all the regions */
@@ -364,9 +359,12 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         public void onPluginEnable(PluginEnableEvent event) {
             Plugin p = event.getPlugin();
             String name = p.getDescription().getName();
-            if(name.equals("dynmap") || name.equals("WorldGuard")) {
-                if(dynmap.isEnabled() && wg.isEnabled())
+            if(name.equals("dynmap")) {
+                Plugin wg = p.getServer().getPluginManager().getPlugin("WorldGuard");
+                if(wg != null && wg.isEnabled())
                     activate();
+            } else if(name.equals("WorldGuard") && dynmap.isEnabled()) {   
+                activate();
             }
         }
     }
@@ -382,20 +380,16 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         }
         api = (DynmapAPI)dynmap; /* Get API */
         /* Get WorldGuard */
-        Plugin p = pm.getPlugin("WorldGuard");
-        if(p == null) {
+        Plugin wgp = pm.getPlugin("WorldGuard");
+        if(wgp == null) {
             severe("Cannot find WorldGuard!");
             return;
         }
-        wg = (WorldGuardPlugin)p;
-        
-        platform = WorldGuard.getInstance().getPlatform();
-        cache = WorldGuard.getInstance().getProfileCache();
         
         getServer().getPluginManager().registerEvents(new OurServerListener(), this);        
         
         /* If both enabled, activate */
-        if(dynmap.isEnabled() && wg.isEnabled())
+        if(dynmap.isEnabled() && wgp.isEnabled())
             activate();
         /* Start up metrics */
         try {
