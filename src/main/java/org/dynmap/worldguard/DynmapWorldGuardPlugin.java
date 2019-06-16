@@ -26,13 +26,13 @@ import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerSet;
 
+import com.sk89q.squirrelid.cache.ProfileCache;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.domains.PlayerDomain;
-import com.sk89q.worldguard.internal.platform.WorldGuardPlatform;
 import com.sk89q.worldguard.protection.flags.BooleanFlag;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
@@ -112,10 +112,11 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
 
     private String formatInfoWindow(ProtectedRegion region, AreaMarker m) {
         String v = "<div class=\"regioninfo\">"+infowindow+"</div>";
+        ProfileCache pc = WorldGuard.getInstance().getProfileCache();
         v = v.replace("%regionname%", m.getLabel());
-        v = v.replace("%playerowners%", region.getOwners().toPlayersString(WorldGuard.getInstance().getProfileCache()));
+        v = v.replace("%playerowners%", region.getOwners().toPlayersString(pc));
         v = v.replace("%groupowners%", region.getOwners().toGroupsString());
-        v = v.replace("%playermembers%", region.getMembers().toPlayersString(WorldGuard.getInstance().getProfileCache()));
+        v = v.replace("%playermembers%", region.getMembers().toPlayersString(pc));
         v = v.replace("%groupmembers%", region.getMembers().toGroupsString());
         if(region.getParent() != null)
             v = v.replace("%parent%", region.getParent().getId());
