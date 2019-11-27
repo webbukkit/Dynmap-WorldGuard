@@ -84,12 +84,11 @@
 			<version>3.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>org.spigotmc</groupId>
-			<artifactId>spigot</artifactId>
-			<version>1.14.4-R0.1-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>provided</scope>
-		</dependency>
+            <groupId>org.bukkit</groupId>
+            <artifactId>bukkit</artifactId>
+            <version>1.14.4-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+    	</dependency>
 		<dependency>
 			<groupId>com.sk89q.worldguard</groupId>
 			<artifactId>worldguard-bukkit</artifactId>
