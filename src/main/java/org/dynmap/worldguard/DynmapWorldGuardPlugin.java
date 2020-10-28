@@ -392,13 +392,6 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         /* If both enabled, activate */
         if(dynmap.isEnabled() && wgp.isEnabled())
             activate();
-        /* Start up metrics */
-        try {
-            MetricsLite ml = new MetricsLite(this);
-            ml.start();
-        } catch (IOException iox) {
-            
-        }
     }
     
     private void registerCustomFlags() {
