@@ -1,0 +1,61 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+
+    maven {
+        url 'https://repo.mikeprimm.com/'
+    }
+
+    maven {
+        url 'https://maven.enginehub.org/repo/'
+    }
+}
+
+dependencies {
+    compileOnly 'us.dynmap:dynmap-api:3.0-SNAPSHOT'
+    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.0'
+    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.0.0'
+    compileOnly 'com.sk89q:squirrelid:0.2.0'
+    compileOnly 'com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT'
+}
+
+group = 'org.dynmap'
+version = '1.3-SNAPSHOT'
+
+java.sourceCompatibility = JavaVersion.VERSION_16
+java.targetCompatibility = JavaVersion.VERSION_16
+
+tasks {
+    processResources {
+        from("${project.rootDir}/src/main/resources") {
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            project.properties.findAll().each {
+                prop ->
+                    if (prop.value != null && prop.value instanceof java.lang.String) {
+                        filter(ReplaceTokens, tokens: [(prop.key): prop.value])
+                        filter(ReplaceTokens, tokens: [('project.' + prop.key): prop.value])
+                    }
+            }
+        }
+    }
+
+    compileJava {
+        options.compilerArgs += ["-Xlint:all", "-Xlint:-processing"]
+        options.encoding = 'UTF-8'
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from(components.java)
+        }
+    }
+}
