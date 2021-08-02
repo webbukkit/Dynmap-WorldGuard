@@ -23,7 +23,7 @@ dependencies {
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.5'
     compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.0.0'
     compileOnly 'com.sk89q:squirrelid:0.2.0'
-    compileOnly 'io.papermc:paper-api:1.17.1-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
 }
 
 group = 'org.dynmap'
