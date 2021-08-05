@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.dynmap</groupId>
   <artifactId>Dynmap-WorldGuard</artifactId>
-  
+
     <build>
   	  <resources>
 		<resource>
@@ -22,7 +22,7 @@
 		  </excludes>
 		</resource>
 	  </resources>
-  
+
   	<plugins>
  			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -61,7 +61,7 @@
 			</plugin>
   	</plugins>
   </build>
-  
+
        <repositories>
 		<repository>
 			<releases>
@@ -79,6 +79,10 @@
 			<id>sk89q-repo</id>
 			<url>http://maven.sk89q.com/repo/</url>
 		</repository>
+		   <repository>
+			   <id>papermc</id>
+			   <url>https://papermc.io/repo/repository/maven-public/</url>
+		   </repository>
 	</repositories>
   
   <dependencies>
@@ -87,11 +91,11 @@
   		<artifactId>dynmap-api</artifactId>
   		<version>3.0-SNAPSHOT</version>
   	</dependency>
-  	<dependency>
-		<groupId>com.destroystokyo.paper</groupId>
-		<artifactId>paper-api</artifactId>
-		<version>1.15.2-R0.1-SNAPSHOT</version>
-		<scope>provided</scope>
+	<dependency>
+	  <groupId>io.papermc.paper</groupId>
+	  <artifactId>paper-api</artifactId>
+	  <version>1.17.1-R0.1-SNAPSHOT</version>
+	  <scope>provided</scope>
 	</dependency>
   	<dependency>
   		<groupId>com.sk89q.worldguard</groupId>
