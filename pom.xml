@@ -151,5 +151,5 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-	<version>1.4-beta-1</version>
+	<version>1.4-SNAPSHOT</version>
 </project>
