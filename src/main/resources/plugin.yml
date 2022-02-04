@@ -3,4 +3,5 @@ main: org.dynmap.worldguard.DynmapWorldGuardPlugin
 version: "${project.version}"
 author: mikeprimm
 depend: [ dynmap, WorldGuard ]
+api-version: 1.13
 
