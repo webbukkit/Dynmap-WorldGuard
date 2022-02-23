@@ -16,6 +16,7 @@
 .*.sw[a-p]
 
 # various other potential build files
+/.gradle
 /build
 /bin
 /dist
