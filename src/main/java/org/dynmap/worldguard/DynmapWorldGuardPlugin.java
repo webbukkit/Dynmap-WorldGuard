@@ -328,8 +328,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
 
             /* Make outline */
             List<BlockVector2> points = expandPolygonXZByOne(region.getPoints());
-            x = new double[4];
-            z = new double[4];
+            x = new double[points.size()];
+            z = new double[points.size()];
             for (int i = 0; i < points.size(); i++) {
                 x[i] = points.get(i).getX();
                 z[i] = points.get(i).getZ();
