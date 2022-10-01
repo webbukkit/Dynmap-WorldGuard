@@ -273,10 +273,17 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             Polygonal2DRegion poly2d = new Polygonal2DRegion(null, points, 0, 0);
             BlockVector2 max = poly2d.getMaximumPoint().toBlockVector2();
             BlockVector2 min = poly2d.getMinimumPoint().toBlockVector2();
-            result.add(max);
-            result.add(max.add(1, 0));
-            result.add(min.add(1, 0));
-            result.add(min);
+            if (min.getBlockX() == max.getBlockX()) {
+                result.add(min);
+                result.add(max.add(0, 1));
+                result.add(max.add(1, 1));
+                result.add(min.add(1, 0));
+            } else {
+                result.add(min);
+                result.add(max.add(1, 0));
+                result.add(max.add(1, 1));
+                result.add(min.add(0, 1));
+            }
             return result;
         }
         if (loop != 1) {
