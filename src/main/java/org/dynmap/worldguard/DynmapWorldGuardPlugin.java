@@ -1,7 +1,9 @@
 package org.dynmap.worldguard;
 
+import com.sk89q.worldedit.regions.Polygonal2DRegion;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -227,7 +229,105 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             m.setBoostFlag((b == null)?false:b.booleanValue());
         }
     }
-        
+
+    private static double cross(BlockVector2 p1, BlockVector2 p2) {
+        return p1.getX() * p2.getZ() - p1.getZ() * p2.getX();
+    }
+
+    private static double calcAreaOfPolygon(List<BlockVector2> points) {
+        double area = 0;
+        for (int i = 0; i < points.size(); i++) {
+            area += cross(points.get(i), points.get((i + 1) % points.size()));
+        }
+        return area / 2.0;
+    }
+
+    /**
+     * Calc loop direction of given polygon.
+     *
+     * @param points Polygon points.
+     *
+     * @return When returns 1 it is clockwise, when returns -1 it is anticlockwise.
+     *         Other than that, polygon is collapsed.
+     */
+    private static int getPolygonLoop(List<BlockVector2> points) {
+        double area = calcAreaOfPolygon(points);
+        if (area > 0) {
+            return 1;
+        } else if (area < 0) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
+
+    private static List<BlockVector2> expandPolygonXZByOne(List<BlockVector2> points) {
+        List<BlockVector2> pointsCopy = new ArrayList<>(points);
+        if (points.size() < 3) {
+            return pointsCopy;
+        }
+
+        List<BlockVector2> result = new ArrayList<>();
+        int loop = getPolygonLoop(points);
+        if (loop == 0) {
+            Polygonal2DRegion poly2d = new Polygonal2DRegion(null, points, 0, 0);
+            BlockVector2 max = poly2d.getMaximumPoint().toBlockVector2();
+            BlockVector2 min = poly2d.getMinimumPoint().toBlockVector2();
+            if (min.getBlockX() == max.getBlockX()) {
+                result.add(min);
+                result.add(max.add(0, 1));
+                result.add(max.add(1, 1));
+                result.add(min.add(1, 0));
+            } else {
+                result.add(min);
+                result.add(max.add(1, 0));
+                result.add(max.add(1, 1));
+                result.add(min.add(0, 1));
+            }
+            return result;
+        }
+        if (loop != 1) {
+            Collections.reverse(pointsCopy);
+        }
+
+        List<BlockVector2> pointAdded = new ArrayList<>();
+        for (int i = 0; i < pointsCopy.size(); i++) {
+            BlockVector2 prev = pointsCopy.get((i - 1 + pointsCopy.size()) % pointsCopy.size());
+            BlockVector2 cur = pointsCopy.get(i);
+            BlockVector2 next = pointsCopy.get((i + 1) % pointsCopy.size());
+            pointAdded.add(cur);
+            if (cross(cur.subtract(prev), next.subtract(cur)) == 0 && cur.subtract(prev).dot(next.subtract(cur)) < 0) {
+                pointAdded.add(cur);
+            }
+        }
+        pointsCopy = pointAdded;
+
+        for (int i = 0; i < pointsCopy.size(); i++) {
+            BlockVector2 prev = pointsCopy.get((i - 1 + pointsCopy.size()) % pointsCopy.size());
+            BlockVector2 cur = pointsCopy.get(i);
+            BlockVector2 next = pointsCopy.get((i + 1) % pointsCopy.size());
+            int xPrev = prev.getX();
+            int zPrev = prev.getZ();
+            int xCur = cur.getX();
+            int zCur = cur.getZ();
+            int xNext = next.getX();
+            int zNext = next.getZ();
+
+            int xCurNew = xCur;
+            int zCurNew = zCur;
+
+            if (zPrev < zCur || zCur < zNext || cur.equals(next) && xPrev < xCur || prev.equals(cur) && xNext < xCur) {
+                xCurNew++;
+            }
+            if (xCur < xPrev || xNext < xCur || cur.equals(next) && zPrev < zCur || prev.equals(cur) && zNext < zCur) {
+                zCurNew++;
+            }
+
+            result.add(BlockVector2.at(xCurNew, zCurNew));
+        }
+        return result;
+    }
+
     /* Handle specific region */
     private void handleRegion(World world, ProtectedRegion region, Map<String, AreaMarker> newmap) {
         String name = region.getId();
@@ -243,28 +343,20 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             BlockVector3 l0 = region.getMinimumPoint();
             BlockVector3 l1 = region.getMaximumPoint();
 
-            if(tn == RegionType.CUBOID) { /* Cubiod region? */
-                /* Make outline */
-                x = new double[4];
-                z = new double[4];
-                x[0] = l0.getX(); z[0] = l0.getZ();
-                x[1] = l0.getX(); z[1] = l1.getZ()+1.0;
-                x[2] = l1.getX() + 1.0; z[2] = l1.getZ()+1.0;
-                x[3] = l1.getX() + 1.0; z[3] = l0.getZ();
-            }
-            else if(tn == RegionType.POLYGON) {
-                ProtectedPolygonalRegion ppr = (ProtectedPolygonalRegion)region;
-                List<BlockVector2> points = ppr.getPoints();
-                x = new double[points.size()];
-                z = new double[points.size()];
-                for(int i = 0; i < points.size(); i++) {
-                    BlockVector2 pt = points.get(i);
-                    x[i] = pt.getX(); z[i] = pt.getZ();
-                }
-            }
-            else {  /* Unsupported type */
+            if(tn != RegionType.CUBOID && tn != RegionType.POLYGON) {
+                /* Unsupported type */
                 return;
             }
+
+            /* Make outline */
+            List<BlockVector2> points = expandPolygonXZByOne(region.getPoints());
+            x = new double[points.size()];
+            z = new double[points.size()];
+            for (int i = 0; i < points.size(); i++) {
+                x[i] = points.get(i).getX();
+                z[i] = points.get(i).getZ();
+            }
+
             String markerid = world.getName() + "_" + id;
             AreaMarker m = resareas.remove(markerid); /* Existing area? */
             if(m == null) {
