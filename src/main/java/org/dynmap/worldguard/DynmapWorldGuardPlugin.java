@@ -69,7 +69,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     Set<String> hidden;
     boolean stop; 
     int maxdepth;
-    boolean visibilityByFlags = false;
+    boolean visibilityByFlagsEnable = false;
+    boolean visibilityByFlagsDefault = true;
 
     @Override
     public void onLoad() {
@@ -468,7 +469,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
         maxdepth = cfg.getInt("maxdepth", 16);
         updatesPerTick = cfg.getInt("updates-per-tick", 20);
-        visibilityByFlags = cfg.getBoolean("visibility-by-flags", false);
+        visibilityByFlagsEnable = cfg.getBoolean("visibility-by-flags.enable", false);
+        visibilityByFlagsDefault = cfg.getBoolean("visibility-by-flags.hide-by-default", true);
 
         /* Get style information */
         defstyle = new AreaStyle(cfg, "regionstyle");
