@@ -44,16 +44,20 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionType;
 
+import javax.annotation.Nullable;
+
 public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
     private static final String DEF_INFOWINDOW = "<div class=\"infowindow\"><span style=\"font-size:120%;\">%regionname%</span><br /> Owner <span style=\"font-weight:bold;\">%playerowners%</span><br />Flags<br /><span style=\"font-weight:bold;\">%flags%</span></div>";
     public static final String BOOST_FLAG = "dynmap-boost";
     public static final String VISIBLE_FLAG = "dynmap-showonmap";
+    public static final String HIDE_FLAG = "dynmap-hideonmap";
     Plugin dynmap;
     DynmapAPI api;
     MarkerAPI markerapi;
     BooleanFlag boost_flag;
     BooleanFlag visible_flag;
+    BooleanFlag hide_flag;
     int updatesPerTick = 20;
 
     FileConfiguration cfg;
@@ -69,8 +73,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     Set<String> hidden;
     boolean stop; 
     int maxdepth;
-    boolean visibilityByFlagsEnable = false;
-    boolean visibilityByFlagsDefault = true;
+    boolean vbfEnable = false;
+    boolean vbfHideByDefault = true;
 
     @Override
     public void onLoad() {
@@ -149,6 +153,31 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             if(hidden.contains(id) || hidden.contains("world:" + worldname) || hidden.contains(worldname + "/" + id))
                 return false;
         }
+        return true;
+    }
+
+    private boolean isVisible(
+            final @Nullable ProtectedRegion region,
+            final @Nullable World world
+    ) {
+        if (region == null || world == null)
+            return false;
+
+        if (!(this.isVisible(region.getId(), world.getName())))
+            return false;
+
+        if (vbfEnable) {
+            Boolean hideFlag = region.getFlag(hide_flag);
+            if (hideFlag != null && hideFlag)
+                return false;
+
+            if (vbfHideByDefault) {
+                Boolean visibleFlag = region.getFlag(visible_flag);
+                if (visibleFlag == null || !visibleFlag)
+                    return false;
+            }
+        }
+
         return true;
     }
     
@@ -242,7 +271,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         double[] z = null;
                 
         /* Handle areas */
-        if(isVisible(region.getId(), world.getName())) {
+        if(isVisible(region, world)) {
             String id = region.getId();
             RegionType tn = region.getType();
             BlockVector3 l0 = region.getMinimumPoint();
@@ -428,6 +457,17 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         if (visible_flag == null) {
             log.info("Custom flag '" + VISIBLE_FLAG + "' not registered");
         }
+
+        try {
+            BooleanFlag hideFlag = new BooleanFlag(HIDE_FLAG);
+            fr.register(hideFlag);
+            hide_flag = hideFlag;
+        } catch (FlagConflictException ex) {
+            log.info("Error registering flag - " + ex.getMessage());
+        }
+        if (hide_flag == null) {
+            log.info("Custom flag '" + HIDE_FLAG + "' not registered");
+        }
     }
     
     private boolean reload = false;
@@ -469,8 +509,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
         maxdepth = cfg.getInt("maxdepth", 16);
         updatesPerTick = cfg.getInt("updates-per-tick", 20);
-        visibilityByFlagsEnable = cfg.getBoolean("visibility-by-flags.enable", false);
-        visibilityByFlagsDefault = cfg.getBoolean("visibility-by-flags.hide-by-default", true);
+        vbfEnable = cfg.getBoolean("visibility-by-flags.enable", false);
+        vbfHideByDefault = cfg.getBoolean("visibility-by-flags.hide-by-default", true);
 
         /* Get style information */
         defstyle = new AreaStyle(cfg, "regionstyle");
