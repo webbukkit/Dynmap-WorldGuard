@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -47,10 +48,12 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
     private static final String DEF_INFOWINDOW = "<div class=\"infowindow\"><span style=\"font-size:120%;\">%regionname%</span><br /> Owner <span style=\"font-weight:bold;\">%playerowners%</span><br />Flags<br /><span style=\"font-weight:bold;\">%flags%</span></div>";
     public static final String BOOST_FLAG = "dynmap-boost";
+    public static final String VISIBLE_FLAG = "dynmap-showonmap";
     Plugin dynmap;
     DynmapAPI api;
     MarkerAPI markerapi;
     BooleanFlag boost_flag;
+    BooleanFlag visible_flag;
     int updatesPerTick = 20;
 
     FileConfiguration cfg;
@@ -401,9 +404,10 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     }
     
     private void registerCustomFlags() {
+        FlagRegistry fr = WorldGuard.getInstance().getFlagRegistry();
+
         try {
             BooleanFlag bf = new BooleanFlag(BOOST_FLAG);
-            FlagRegistry fr = WorldGuard.getInstance().getFlagRegistry();
         	fr.register(bf);
             boost_flag = bf;
         } catch (Exception x) {
@@ -411,6 +415,17 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         }
         if (boost_flag == null) {
             log.info("Custom flag '" + BOOST_FLAG + "' not registered");
+        }
+
+        try {
+            BooleanFlag visibleFlag = new BooleanFlag(VISIBLE_FLAG);
+            fr.register(visibleFlag);
+            visible_flag = visibleFlag;
+        } catch (FlagConflictException ex) {
+            log.info("Error registering flag - " + ex.getMessage());
+        }
+        if (visible_flag == null) {
+            log.info("Custom flag '" + VISIBLE_FLAG + "' not registered");
         }
     }
     
