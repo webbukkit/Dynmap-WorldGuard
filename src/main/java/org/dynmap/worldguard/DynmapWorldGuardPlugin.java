@@ -71,7 +71,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     Set<String> hidden;
     boolean stop; 
     int maxdepth;
-    boolean vbfEnable = false;
+    boolean vbfEnable        = false;
     boolean vbfHideByDefault = true;
 
     @Override
@@ -158,17 +158,20 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             final @Nullable ProtectedRegion region,
             final @Nullable World world
     ) {
-        if (region == null || world == null)
+        if (region == null || world == null) {
             return false;
+        }
 
-        if (!(this.isVisible(region.getId(), world.getName())))
+        if (!(this.isVisible(region.getId(), world.getName()))) {
             return false;
+        }
 
         if (vbfEnable) {
             Boolean visibleFlag = region.getFlag(visible_flag);
 
-            if (visibleFlag == null)
+            if (visibleFlag == null) {
                 return !vbfHideByDefault;
+            }
 
             return visibleFlag;
         }
@@ -493,8 +496,14 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
         maxdepth = cfg.getInt("maxdepth", 16);
         updatesPerTick = cfg.getInt("updates-per-tick", 20);
-        vbfEnable = cfg.getBoolean("visibility-by-flags.enable", false);
-        vbfHideByDefault = cfg.getBoolean("visibility-by-flags.hide-by-default", true);
+        vbfEnable = cfg.getBoolean(
+                "visibility-by-flags.enable",
+                false
+        );
+        vbfHideByDefault = cfg.getBoolean(
+                "visibility-by-flags.hide-by-default",
+                true
+        );
 
         /* Get style information */
         defstyle = new AreaStyle(cfg, "regionstyle");
