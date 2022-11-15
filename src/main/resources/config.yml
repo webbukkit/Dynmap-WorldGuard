@@ -55,5 +55,7 @@ updates-per-tick: 20
 
 # Control the visibility of regions by WorldGuard flags
 visibility-by-flags:
+  # Enable the feature to use WorldGuard flags to control visibility of regions
   enable: false
+  # Hide regions, without the 'dynmap-showonmap' WorldGuard flag
   hide-by-default: true

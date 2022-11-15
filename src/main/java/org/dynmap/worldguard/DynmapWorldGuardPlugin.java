@@ -178,7 +178,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
 
         return true;
     }
-    
+
     private void addStyle(String resid, String worldid, AreaMarker m, ProtectedRegion region) {
         AreaStyle as = cusstyle.get(worldid + "/" + resid);
         if(as == null) {
@@ -456,7 +456,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             log.info("Custom flag '" + VISIBLE_FLAG + "' not registered");
         }
     }
-    
+
     private boolean reload = false;
     
     private void activate() {        
