@@ -51,13 +51,11 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static final String DEF_INFOWINDOW = "<div class=\"infowindow\"><span style=\"font-size:120%;\">%regionname%</span><br /> Owner <span style=\"font-weight:bold;\">%playerowners%</span><br />Flags<br /><span style=\"font-weight:bold;\">%flags%</span></div>";
     public static final String BOOST_FLAG = "dynmap-boost";
     public static final String VISIBLE_FLAG = "dynmap-showonmap";
-    public static final String HIDE_FLAG = "dynmap-hideonmap";
     Plugin dynmap;
     DynmapAPI api;
     MarkerAPI markerapi;
     BooleanFlag boost_flag;
     BooleanFlag visible_flag;
-    BooleanFlag hide_flag;
     int updatesPerTick = 20;
 
     FileConfiguration cfg;
@@ -167,15 +165,12 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             return false;
 
         if (vbfEnable) {
-            Boolean hideFlag = region.getFlag(hide_flag);
-            if (hideFlag != null && hideFlag)
-                return false;
+            Boolean visibleFlag = region.getFlag(visible_flag);
 
-            if (vbfHideByDefault) {
-                Boolean visibleFlag = region.getFlag(visible_flag);
-                if (visibleFlag == null || !visibleFlag)
-                    return false;
-            }
+            if (visibleFlag == null)
+                return !vbfHideByDefault;
+
+            return visibleFlag;
         }
 
         return true;
@@ -456,17 +451,6 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         }
         if (visible_flag == null) {
             log.info("Custom flag '" + VISIBLE_FLAG + "' not registered");
-        }
-
-        try {
-            BooleanFlag hideFlag = new BooleanFlag(HIDE_FLAG);
-            fr.register(hideFlag);
-            hide_flag = hideFlag;
-        } catch (FlagConflictException ex) {
-            log.info("Error registering flag - " + ex.getMessage());
-        }
-        if (hide_flag == null) {
-            log.info("Custom flag '" + HIDE_FLAG + "' not registered");
         }
     }
     
