@@ -11,6 +11,8 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.sk89q.worldguard.protection.flags.StringFlag;
+import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -47,10 +49,12 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
     private static final String DEF_INFOWINDOW = "<div class=\"infowindow\"><span style=\"font-size:120%;\">%regionname%</span><br /> Owner <span style=\"font-weight:bold;\">%playerowners%</span><br />Flags<br /><span style=\"font-weight:bold;\">%flags%</span></div>";
     public static final String BOOST_FLAG = "dynmap-boost";
+    public static final String FLAGS_FILTER_FLAG = "dynmap-flags-filter";
     Plugin dynmap;
     DynmapAPI api;
     MarkerAPI markerapi;
     BooleanFlag boost_flag;
+    StringFlag flags_filter_flag;
     int updatesPerTick = 20;
 
     FileConfiguration cfg;
@@ -400,9 +404,10 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     }
     
     private void registerCustomFlags() {
+        FlagRegistry fr = WorldGuard.getInstance().getFlagRegistry();
+
         try {
             BooleanFlag bf = new BooleanFlag(BOOST_FLAG);
-            FlagRegistry fr = WorldGuard.getInstance().getFlagRegistry();
         	fr.register(bf);
             boost_flag = bf;
         } catch (Exception x) {
@@ -410,6 +415,17 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         }
         if (boost_flag == null) {
             log.info("Custom flag '" + BOOST_FLAG + "' not registered");
+        }
+
+        try {
+            StringFlag flagsFilterFlag = new StringFlag(FLAGS_FILTER_FLAG);
+            fr.register(flagsFilterFlag);
+            flags_filter_flag = flagsFilterFlag;
+        } catch (FlagConflictException ex) {
+            log.info("Error registering flag - " + ex.getMessage());
+        }
+        if (flags_filter_flag == null) {
+            log.info("Custom flag '" + FLAGS_FILTER_FLAG + "' not registered");
         }
     }
     
