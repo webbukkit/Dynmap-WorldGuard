@@ -5,3 +5,5 @@ author: mikeprimm
 depend: [ dynmap, WorldGuard ]
 api-version: 1.13
 
+libraries:
+  - org.json:json:${json.version}
