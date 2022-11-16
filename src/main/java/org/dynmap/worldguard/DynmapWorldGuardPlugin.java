@@ -136,7 +136,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
                                                flagsFilter
                                            );
         Map<Flag<?>, Object> map         = region.getFlags();
-        String               flgs        = "";
+        StringBuilder        flgs        = new StringBuilder();
         for (Flag<?> f : map.keySet()) {
             String flagName = f.getName();
 
@@ -151,10 +151,13 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             }
 
             if (flagFilter) {
-                flgs += f.getName() + ": " + map.get(f).toString() + "<br/>";
+                flgs.append(flagName);
+                flgs.append(": ");
+                flgs.append(map.get(f).toString());
+                flgs.append("<br/>");
             }
         }
-        v = v.replace("%flags%", flgs);
+        v = v.replace("%flags%", flgs.toString());
 
         return v;
     }
