@@ -72,6 +72,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     Set<String> hidden;
     boolean stop; 
     int maxdepth;
+    boolean flagFilterEnabled;
+    boolean flagFilterHiddenByDefault;
 
     @Override
     public void onLoad() {
@@ -144,10 +146,14 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
                 continue;
             }
 
-            boolean flagFilter      = false;
-            Object  flagFilterValue = flagsJson.get(flagName);
-            if (flagFilterValue instanceof Boolean) {
-                flagFilter = (Boolean)flagFilterValue;
+            boolean flagFilter = true;
+            if (flagFilterEnabled) {
+                flagFilter = !flagFilterHiddenByDefault;
+
+                Object flagFilterValue = flagsJson.get(flagName);
+                if (flagFilterValue instanceof Boolean) {
+                    flagFilter = (Boolean)flagFilterValue;
+                }
             }
 
             if (flagFilter) {
@@ -493,6 +499,14 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
         maxdepth = cfg.getInt("maxdepth", 16);
         updatesPerTick = cfg.getInt("updates-per-tick", 20);
+        flagFilterEnabled         = cfg.getBoolean(
+                "flag-filter.enable",
+                false
+        );
+        flagFilterHiddenByDefault = cfg.getBoolean(
+                "flag-filter.hidden-by-default",
+                false
+        );
 
         /* Get style information */
         defstyle = new AreaStyle(cfg, "regionstyle");
