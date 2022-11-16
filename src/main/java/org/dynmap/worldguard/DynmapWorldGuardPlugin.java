@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.base.Strings;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import org.bstats.bukkit.Metrics;
@@ -44,6 +45,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionType;
+import org.json.JSONObject;
 
 public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
@@ -128,15 +130,35 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         else
             v = v.replace("%parent%", "");
         v = v.replace("%priority%", String.valueOf(region.getPriority()));
-        Map<Flag<?>, Object> map = region.getFlags();
-        String flgs = "";
-        for(Flag<?> f : map.keySet()) {
-            flgs += f.getName() + ": " + map.get(f).toString() + "<br/>";
+
+        String               flagsFilter = region.getFlag(flags_filter_flag);
+        JSONObject           flagsJson   = StringFlagUtils.generateJson(
+                                               flagsFilter
+                                           );
+        Map<Flag<?>, Object> map         = region.getFlags();
+        String               flgs        = "";
+        for (Flag<?> f : map.keySet()) {
+            String flagName = f.getName();
+
+            if (Strings.isNullOrEmpty(flagName)) {
+                continue;
+            }
+
+            boolean flagFilter      = false;
+            Object  flagFilterValue = flagsJson.get(flagName);
+            if (flagFilterValue instanceof Boolean) {
+                flagFilter = (Boolean)flagFilterValue;
+            }
+
+            if (flagFilter) {
+                flgs += f.getName() + ": " + map.get(f).toString() + "<br/>";
+            }
         }
         v = v.replace("%flags%", flgs);
+
         return v;
     }
-    
+
     private boolean isVisible(String id, String worldname) {
         if((visible != null) && (visible.size() > 0)) {
             if((visible.contains(id) == false) && (visible.contains("world:" + worldname) == false) &&
