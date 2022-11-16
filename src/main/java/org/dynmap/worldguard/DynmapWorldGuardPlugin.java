@@ -71,8 +71,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     Set<String> hidden;
     boolean stop; 
     int maxdepth;
-    boolean vbfEnable        = false;
-    boolean vbfHideByDefault = true;
+    boolean vbfEnabled;
+    boolean vbfHideByDefault;
 
     @Override
     public void onLoad() {
@@ -166,7 +166,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             return false;
         }
 
-        if (vbfEnable) {
+        if (vbfEnabled) {
             Boolean visibleFlag = region.getFlag(visible_flag);
 
             if (visibleFlag == null) {
@@ -496,7 +496,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
         maxdepth = cfg.getInt("maxdepth", 16);
         updatesPerTick = cfg.getInt("updates-per-tick", 20);
-        vbfEnable = cfg.getBoolean(
+        vbfEnabled = cfg.getBoolean(
                 "visibility-by-flags.enable",
                 false
         );
