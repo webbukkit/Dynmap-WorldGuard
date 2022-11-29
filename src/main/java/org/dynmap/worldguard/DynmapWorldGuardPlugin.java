@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -43,14 +44,18 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionType;
 
+import javax.annotation.Nullable;
+
 public class DynmapWorldGuardPlugin extends JavaPlugin {
     private static Logger log;
     private static final String DEF_INFOWINDOW = "<div class=\"infowindow\"><span style=\"font-size:120%;\">%regionname%</span><br /> Owner <span style=\"font-weight:bold;\">%playerowners%</span><br />Flags<br /><span style=\"font-weight:bold;\">%flags%</span></div>";
     public static final String BOOST_FLAG = "dynmap-boost";
+    public static final String VISIBLE_FLAG = "dynmap-showonmap";
     Plugin dynmap;
     DynmapAPI api;
     MarkerAPI markerapi;
     BooleanFlag boost_flag;
+    BooleanFlag visible_flag;
     int updatesPerTick = 20;
 
     FileConfiguration cfg;
@@ -66,6 +71,8 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     Set<String> hidden;
     boolean stop; 
     int maxdepth;
+    boolean vbfEnabled;
+    boolean vbfHideByDefault;
 
     @Override
     public void onLoad() {
@@ -146,7 +153,32 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         }
         return true;
     }
-    
+
+    private boolean isVisible(
+            final @Nullable ProtectedRegion region,
+            final @Nullable World world
+    ) {
+        if (region == null || world == null) {
+            return false;
+        }
+
+        if (!(this.isVisible(region.getId(), world.getName()))) {
+            return false;
+        }
+
+        if (vbfEnabled) {
+            Boolean visibleFlag = region.getFlag(visible_flag);
+
+            if (visibleFlag == null) {
+                return !vbfHideByDefault;
+            }
+
+            return visibleFlag;
+        }
+
+        return true;
+    }
+
     private void addStyle(String resid, String worldid, AreaMarker m, ProtectedRegion region) {
         AreaStyle as = cusstyle.get(worldid + "/" + resid);
         if(as == null) {
@@ -237,7 +269,7 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         double[] z = null;
                 
         /* Handle areas */
-        if(isVisible(region.getId(), world.getName())) {
+        if(isVisible(region, world)) {
             String id = region.getId();
             RegionType tn = region.getType();
             BlockVector3 l0 = region.getMinimumPoint();
@@ -400,9 +432,10 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
     }
     
     private void registerCustomFlags() {
+        FlagRegistry fr = WorldGuard.getInstance().getFlagRegistry();
+
         try {
             BooleanFlag bf = new BooleanFlag(BOOST_FLAG);
-            FlagRegistry fr = WorldGuard.getInstance().getFlagRegistry();
         	fr.register(bf);
             boost_flag = bf;
         } catch (Exception x) {
@@ -411,8 +444,19 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         if (boost_flag == null) {
             log.info("Custom flag '" + BOOST_FLAG + "' not registered");
         }
+
+        try {
+            BooleanFlag visibleFlag = new BooleanFlag(VISIBLE_FLAG);
+            fr.register(visibleFlag);
+            visible_flag = visibleFlag;
+        } catch (FlagConflictException ex) {
+            log.info("Error registering flag - " + ex.getMessage());
+        }
+        if (visible_flag == null) {
+            log.info("Custom flag '" + VISIBLE_FLAG + "' not registered");
+        }
     }
-    
+
     private boolean reload = false;
     
     private void activate() {        
@@ -452,6 +496,14 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
         maxdepth = cfg.getInt("maxdepth", 16);
         updatesPerTick = cfg.getInt("updates-per-tick", 20);
+        vbfEnabled = cfg.getBoolean(
+                "visibility-by-flags.enable",
+                false
+        );
+        vbfHideByDefault = cfg.getBoolean(
+                "visibility-by-flags.hide-by-default",
+                true
+        );
 
         /* Get style information */
         defstyle = new AreaStyle(cfg, "regionstyle");
