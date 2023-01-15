@@ -12,15 +12,12 @@ public class StringFlagUtils {
 	private static final String  KEY_GROUP     = "key";
 	private static final String  VALUE_GROUP   = "value";
 	private static final Pattern ENTRY_PATTERN = Pattern.compile(
-			"[\"']?(?<" +
-			StringFlagUtils.KEY_GROUP +
-			">[\\w-])[\"']?([:=][\"']?(?<" +
-			StringFlagUtils.VALUE_GROUP +
-			">[\\w-])[\"']?)?"
-	);
+		"[\"']?(?<" + StringFlagUtils.KEY_GROUP +
+		">[\\w-])[\"']?([:=][\"']?(?<" + StringFlagUtils.VALUE_GROUP +
+		">[\\w-])[\"']?)?");
 
 	public static JSONObject generateJson(
-			final @Nullable String content
+		final @Nullable String content
 	)
 	throws JSONException {
 		if (Strings.isNullOrEmpty(content)) {
@@ -28,8 +25,8 @@ public class StringFlagUtils {
 		}
 
 		String jsonString = content.trim().replaceAll(
-				"[ \\t\\v\\r\\n]+",
-				""
+			"[ \\t\\v\\r\\n]+",
+			""
 		);
 
 		if (!jsonString.startsWith("{") && !jsonString.endsWith("}")) {
@@ -38,7 +35,8 @@ public class StringFlagUtils {
 			String prefix = "";
 			for (String entry : jsonString.split("[,;]+")) {
 				final Matcher matcher = StringFlagUtils.ENTRY_PATTERN.matcher(
-						entry);
+					entry
+				);
 
 				if (!matcher.matches()) {
 					continue;
@@ -47,8 +45,10 @@ public class StringFlagUtils {
 				String key   = matcher.group(StringFlagUtils.KEY_GROUP);
 				String value = matcher.group(StringFlagUtils.VALUE_GROUP);
 
-				if ("yes".equalsIgnoreCase(value) || "allow".equalsIgnoreCase(
-						value)) {
+				if (
+					"yes".equalsIgnoreCase(value) ||
+					"allow".equalsIgnoreCase(value)
+				) {
 					value = Boolean.TRUE.toString();
 				}
 
