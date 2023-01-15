@@ -45,6 +45,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionType;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class DynmapWorldGuardPlugin extends JavaPlugin {
@@ -150,9 +151,12 @@ public class DynmapWorldGuardPlugin extends JavaPlugin {
             if (flagFilterEnabled) {
                 flagFilter = !flagFilterHiddenByDefault;
 
-                Object flagFilterValue = flagsJson.get(flagName);
-                if (flagFilterValue instanceof Boolean) {
-                    flagFilter = (Boolean)flagFilterValue;
+                try {
+                    Object flagFilterValue = flagsJson.get(flagName);
+                    if (flagFilterValue instanceof Boolean) {
+                        flagFilter = (Boolean)flagFilterValue;
+                    }
+                } catch (JSONException e) {
                 }
             }
 
