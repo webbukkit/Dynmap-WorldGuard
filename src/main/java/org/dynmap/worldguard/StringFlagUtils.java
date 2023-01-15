@@ -13,8 +13,8 @@ public class StringFlagUtils {
 	private static final String  VALUE_GROUP   = "value";
 	private static final Pattern ENTRY_PATTERN = Pattern.compile(
 		"[\"']?(?<" + StringFlagUtils.KEY_GROUP +
-		">[\\w-])[\"']?([:=][\"']?(?<" + StringFlagUtils.VALUE_GROUP +
-		">[\\w-])[\"']?)?");
+		">[\\w-]+)[\"']?([:=][\"']?(?<" + StringFlagUtils.VALUE_GROUP +
+		">[\\w-]+)[\"']?)?");
 
 	public static JSONObject generateJson(
 		final @Nullable String content
