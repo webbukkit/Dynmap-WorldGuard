@@ -52,3 +52,10 @@ maxdepth: 16
     
 # Limit number of regions processed per tick (avoid lag spikes on servers with lots of regions)
 updates-per-tick: 20
+
+# Filter region flags in info window
+flag-filter:
+  # Enable the flag filter feature
+  enable:            false
+  # Should the flags hidden by default
+  hidden-by-default: false
